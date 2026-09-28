@@ -86,4 +86,4 @@ Cek berhasil: buka `http://localhost:…` → tampil halaman beranda.
 ## Tautan
 
 - GitHub Project: https://github.com/users/candrarizkyk/projects/1
-- Prototype Figma: https://www.figma.com/proto/MYJ4HR4Lh39ukfgmDuwA5Z/Update-W6-High-Fidelity-VarEscape-BIFIVE---FIX?page-id=0%3A1&node-id=5-1374&p=f&viewport=410%2C229%2C0.05&t=nt7iCAxbEMk6XiCp-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=4007%3A284&show-proto-sidebar=1
+- Prototype Figma: https://www.figma.com/proto/MYJ4HR4Lh39ukfgmDuwA5Z/Update-W6-High-Fidelity-VarEscape-BIFIVE---FIX?page-id=0%3A1&node-id=4007-284&p=f&viewport=410%2C229%2C0.05&t=nt7iCAxbEMk6XiCp-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=4007%3A284&show-proto-sidebar=1
