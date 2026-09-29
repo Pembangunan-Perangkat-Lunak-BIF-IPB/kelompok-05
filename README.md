@@ -36,19 +36,22 @@ kelompok-05/
 │   ├── .gitignore
 │   ├── database.py
 │   ├── main.py
-│   ├── models.py                   
+│   └── models.py
 └── docs/
     └── pengujian/               # checklist dan skenario uji (Guruh)
 ```
+
 ## Prasyarat
 
 Install dulu sebelum menjalankan aplikasi:
 
 - Git
 - Node.js versi 20.19 atau lebih baru (dikembangkan dengan v24.21.0)
-- Python versi 3.10
-- PostgreSQL versi 14
+- Python versi 3.10 atau lebih baru
+- PostgreSQL versi 14 atau lebih baru
 - DBeaver (atau PostgreSQL GUI Client yang lain)
+
+> **Pengguna Windows:** jalankan semua perintah di **Command Prompt (CMD)**, bukan PowerShell. PowerShell dapat memblokir `npm` dan aktivasi virtual environment (lihat bagian Kendala Umum).
 
 ## Cara Menjalankan
 
@@ -62,14 +65,18 @@ cd kelompok-05
 ### 2. Siapkan basis data
 
 Pastikan layanan PostgreSQL sudah aktif di perangkat yang digunakan, lalu buat basis data baru lewat DBeaver, pgAdmin, atau terminal SQL:
-```bash
-sql
+
+```sql
 CREATE DATABASE varescape_db;
-
-Selanjutnya, buat file bernama .env di dalam folder backend/ dan atur URL koneksi basis data yang sudah dibuat:
-
-DATABASE_URL=postgresql://postgres:password_anda@localhost:5432/varescape_db
 ```
+
+Selanjutnya, buat file bernama `.env` di dalam folder `backend/` dan atur URL koneksi basis data yang sudah dibuat:
+
+```
+DATABASE_URL=postgresql+psycopg://postgres:password_anda@localhost:5432/varescape_db
+```
+
+Ganti `password_anda` dengan password PostgreSQL di perangkat masing-masing. File `.env` tidak ikut di-commit.
 
 ### 3. Jalankan backend
 
@@ -79,7 +86,8 @@ cd backend
 
 # (Opsional) Buat dan aktifkan virtual environment
 python -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate            # Windows (CMD)
+# source venv/bin/activate       # macOS / Linux
 
 # Perintah install dependency
 pip install fastapi uvicorn sqlalchemy "psycopg[binary]" python-dotenv
@@ -88,9 +96,11 @@ pip install fastapi uvicorn sqlalchemy "psycopg[binary]" python-dotenv
 uvicorn main:app --reload --port 8000
 ```
 
-Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `ok` dan database `connected`.
+Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `healthy` dan database `connected`. Tiga tabel inti (`users`, `analysis_runs`, `uploaded_files`) akan terlihat di `varescape_db` pada DBeaver.
 
 ### 4. Jalankan frontend
+
+Buka terminal baru, lalu:
 
 ```bash
 cd frontend
@@ -104,13 +114,17 @@ Peneliti (placeholder). Halaman dengan sidebar dapat dibuka lewat `/guide`,
 
 ## Kendala Umum
 
-<!-- Diisi Guruh dari hasil mencoba README ini di laptop sendiri -->
+<!-- Tambahkan temuan Guruh dari hasil mencoba README ini di laptop sendiri -->
 
 | Masalah | Solusi |
 | --- | --- |
-| … | … |
+| Skrip diblokir PowerShell (aktivasi `venv` atau `npm -v` gagal karena kebijakan eksekusi) | Gunakan Command Prompt (CMD), atau di PowerShell jalankan `npm.cmd` sebagai pengganti `npm` |
+| `ImportError: no pq wrapper available` saat menjalankan backend | Jalankan `pip install "psycopg[binary]"` |
+| `database "varescape_db" does not exist` saat server dinyalakan | Buat basis data dulu: `CREATE DATABASE varescape_db;` (langkah 2) |
+| `cd frontend` gagal / `package.json` tidak ditemukan | Pastikan berada di branch yang berisi kode aplikasi (`git branch -a`, lalu `git checkout <nama-branch>`) |
 
 ## Tautan
 
-- GitHub Project: https://github.com/users/candrarizkyk/projects/1
+- Repository: https://github.com/Pembangunan-Perangkat-Lunak-BIF-IPB/kelompok-05
+- GitHub Project: https://github.com/orgs/Pembangunan-Perangkat-Lunak-BIF-IPB/projects/16
 - Prototype Figma: https://www.figma.com/proto/MYJ4HR4Lh39ukfgmDuwA5Z/Update-W6-High-Fidelity-VarEscape-BIFIVE---FIX?page-id=0%3A1&node-id=4007-284&p=f&viewport=410%2C229%2C0.05&t=nt7iCAxbEMk6XiCp-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=4007%3A284&show-proto-sidebar=1
