@@ -63,12 +63,12 @@ cd kelompok-05
 
 Pastikan layanan PostgreSQL sudah aktif di perangkat yang digunakan, lalu buat basis data baru lewat DBeaver, pgAdmin, atau terminal SQL:
 ```bash
-```sql
+sql
 CREATE DATABASE varescape_db;
 
 Selanjutnya, buat file bernama .env di dalam folder backend/ dan atur URL koneksi basis data yang sudah dibuat:
 
-```DATABASE_URL=postgresql://postgres:password_anda@localhost:5432/varescape_db
+DATABASE_URL=postgresql://postgres:password_anda@localhost:5432/varescape_db
 ```
 
 ### 3. Jalankan backend
