@@ -33,21 +33,22 @@ kelompok-05/
 │   ├── package.json
 │   └── vite.config.js
 ├── backend/
-│   ├── .gitignore/
-│   ├── database.py/
-│   ├── main.py/
-│   ├── models.py/                   
+│   ├── .gitignore
+│   ├── database.py
+│   ├── main.py
+│   ├── models.py                   
 └── docs/
     └── pengujian/               # checklist dan skenario uji (Guruh)
 ```
 ## Prasyarat
 
-Install dulu sebelum menjalankan aplikasi (versi diisi Raihan dan Afifah):
+Install dulu sebelum menjalankan aplikasi:
 
 - Git
 - Node.js versi 20.19 atau lebih baru (dikembangkan dengan v24.21.0)
-- Python versi …
-- PostgreSQL versi …
+- Python versi 3.10
+- PostgreSQL versi 14
+- DBeaver (atau PostgreSQL GUI Client yang lain)
 
 ## Cara Menjalankan
 
@@ -60,24 +61,34 @@ cd kelompok-05
 
 ### 2. Siapkan basis data
 
-<!-- Diisi Afifah: cara membuat database, username/password, file .env -->
-
+Pastikan layanan PostgreSQL sudah aktif di perangkat yang digunakan, lalu buat basis data baru lewat DBeaver, pgAdmin, atau terminal SQL:
 ```bash
-# contoh: createdb varescape
+```sql
+CREATE DATABASE varescape_db;
+
+Selanjutnya, buat file bernama .env di dalam folder backend/ dan atur URL koneksi basis data yang sudah dibuat:
+
+```DATABASE_URL=postgresql://postgres:password_anda@localhost:5432/varescape_db
 ```
 
 ### 3. Jalankan backend
 
-<!-- Diisi Afifah -->
-
 ```bash
+# Masuk ke folder backend
 cd backend
-# perintah install dependency
-# perintah menjalankan migrasi tabel
-# perintah menjalankan server
+
+# (Opsional) Buat dan aktifkan virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+# Perintah install dependency
+pip install fastapi uvicorn sqlalchemy "psycopg[binary]" python-dotenv
+
+# Perintah menjalankan server (tabel basis data otomatis terbuat saat server startup)
+uvicorn main:app --reload --port 8000
 ```
 
-Cek berhasil: buka `http://localhost:…/health` → harus muncul status `ok` dan database `connected`.
+Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `ok` dan database `connected`.
 
 ### 4. Jalankan frontend
 
