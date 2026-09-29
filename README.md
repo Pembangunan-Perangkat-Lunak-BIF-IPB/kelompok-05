@@ -32,7 +32,11 @@ kelompok-05/
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
-├── backend/                     # kode server dan migrasi basis data (Afifah)
+├── backend/
+│   ├── .gitignore/
+│   ├── database.py/
+│   ├── main.py/
+│   ├── models.py/                   
 └── docs/
     └── pengujian/               # checklist dan skenario uji (Guruh)
 ```
