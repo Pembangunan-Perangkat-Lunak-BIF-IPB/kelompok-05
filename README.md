@@ -51,7 +51,7 @@ Install dulu sebelum menjalankan aplikasi:
 - PostgreSQL versi 14 atau lebih baru
 - DBeaver (atau PostgreSQL GUI Client yang lain)
 
-> **Pengguna Windows:** jalankan semua perintah di **Command Prompt (CMD)**, bukan PowerShell. PowerShell dapat memblokir `npm` dan aktivasi virtual environment (lihat bagian Kendala Umum).
+Pengguna Windows disarankan memakai Command Prompt (CMD).
 
 ## Cara Menjalankan
 
@@ -76,8 +76,6 @@ Selanjutnya, buat file bernama `.env` di dalam folder `backend/` dan atur URL ko
 DATABASE_URL=postgresql+psycopg://postgres:password_anda@localhost:5432/varescape_db
 ```
 
-Ganti `password_anda` dengan password PostgreSQL di perangkat masing-masing. File `.env` tidak ikut di-commit.
-
 ### 3. Jalankan backend
 
 ```bash
@@ -86,8 +84,7 @@ cd backend
 
 # (Opsional) Buat dan aktifkan virtual environment
 python -m venv venv
-venv\Scripts\activate            # Windows (CMD)
-# source venv/bin/activate       # macOS / Linux
+venv\Scripts\activate
 
 # Perintah install dependency
 pip install fastapi uvicorn sqlalchemy "psycopg[binary]" python-dotenv
@@ -96,11 +93,9 @@ pip install fastapi uvicorn sqlalchemy "psycopg[binary]" python-dotenv
 uvicorn main:app --reload --port 8000
 ```
 
-Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `healthy` dan database `connected`. Tiga tabel inti (`users`, `analysis_runs`, `uploaded_files`) akan terlihat di `varescape_db` pada DBeaver.
+Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `healthy` dan database `connected`.
 
 ### 4. Jalankan frontend
-
-Buka terminal baru, lalu:
 
 ```bash
 cd frontend
@@ -114,14 +109,11 @@ Peneliti (placeholder). Halaman dengan sidebar dapat dibuka lewat `/guide`,
 
 ## Kendala Umum
 
-<!-- Tambahkan temuan Guruh dari hasil mencoba README ini di laptop sendiri -->
-
 | Masalah | Solusi |
 | --- | --- |
 | Skrip diblokir PowerShell (aktivasi `venv` atau `npm -v` gagal karena kebijakan eksekusi) | Gunakan Command Prompt (CMD), atau di PowerShell jalankan `npm.cmd` sebagai pengganti `npm` |
 | `ImportError: no pq wrapper available` saat menjalankan backend | Jalankan `pip install "psycopg[binary]"` |
-| `database "varescape_db" does not exist` saat server dinyalakan | Buat basis data dulu: `CREATE DATABASE varescape_db;` (langkah 2) |
-| `cd frontend` gagal / `package.json` tidak ditemukan | Pastikan berada di branch yang berisi kode aplikasi (`git branch -a`, lalu `git checkout <nama-branch>`) |
+| `database "varescape_db" does not exist` saat server dinyalakan | Buat basis data dulu dengan `CREATE DATABASE varescape_db;` (langkah 2) |
 
 ## Tautan
 
