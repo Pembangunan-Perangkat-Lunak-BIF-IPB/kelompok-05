@@ -18,18 +18,30 @@ Proyek mata kuliah Pembangunan Perangkat Lunak — Kelompok 5, Bioinformatika IP
 
 ```
 kelompok-05/
-├── frontend/          # kode tampilan (Raihan)
-├── backend/           # kode server dan migrasi basis data (Afifah)
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── layouts/
+│   │   │   ├── Layout.jsx
+│   │   │   └── nav.js
+│   │   ├── pages/
+│   │   │   └── Placeholder.jsx
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+├── backend/                     # kode server dan migrasi basis data (Afifah)
 └── docs/
-    └── pengujian/     # checklist dan skenario uji (Guruh)
+    └── pengujian/               # checklist dan skenario uji (Guruh)
 ```
-
 ## Prasyarat
 
 Install dulu sebelum menjalankan aplikasi (versi diisi Raihan dan Afifah):
 
 - Git
-- Node.js versi …
+- Node.js versi 20.19 atau lebih baru (dikembangkan dengan v24.21.0)
 - Python versi …
 - PostgreSQL versi …
 
@@ -65,15 +77,15 @@ Cek berhasil: buka `http://localhost:…/health` → harus muncul status `ok` da
 
 ### 4. Jalankan frontend
 
-<!-- Diisi Raihan -->
-
 ```bash
 cd frontend
-# perintah install dependency
-# perintah menjalankan frontend
+npm install
+npm run dev
 ```
 
-Cek berhasil: buka `http://localhost:…` → tampil halaman beranda.
+Cek berhasil: buka `http://localhost:5173` → otomatis menuju halaman Login
+Peneliti (placeholder). Halaman dengan sidebar dapat dibuka lewat `/guide`,
+`/analysis/new`, `/history`, `/public`, dan `/admin/accounts`.
 
 ## Kendala Umum
 
