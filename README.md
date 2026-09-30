@@ -98,6 +98,7 @@ Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status
 ### 4. Jalankan frontend
 
 ```bash
+# Pindah direktori ke folder kelompok-05 yang berisi semua file yang dibutuhkan
 cd frontend
 npm install
 npm run dev
