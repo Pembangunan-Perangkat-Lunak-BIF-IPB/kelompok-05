@@ -94,6 +94,18 @@ uvicorn main:app --reload --port 8000
 ```
 
 Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `healthy` dan database `connected`.
+### Endpoint API 
+
+- **Autentikasi:**
+  - `POST /api/v1/auth/register` — Registrasi akun pengguna baru
+  - `POST /api/v1/auth/login` — Autentikasi & penerbitan Token JWT
+- **Workbench Analysis:**
+  - `POST /api/v1/analysis/upload` — Unggah berkas sampel (FASTQ, FASTA, IEDB)
+  - `GET /api/v1/analysis/{run_id}/status` — Cek status pemrosesan analisis
+  - `GET /api/v1/analysis/{run_id}/results` — Penarikan hasil analisis varian
+  - `PATCH /api/v1/analysis/{run_id}/visibility` — Pembaruan visibilitas (`PUBLIC`/`PRIVATE`)
+
+📄 **Dokumentasi Lengkap:** Detail spesifikasi REST API dapat dilihat pada berkas [`docs/api.md`](docs/api.md).
 
 ### 4. Jalankan frontend
 
