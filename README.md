@@ -116,13 +116,14 @@ Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status
 ### 4. Jalankan frontend
 
 ```bash
+# Jalankan perintah berikut pada Terminal Command Prompt
 # Pindah direktori ke folder kelompok-05 yang berisi semua file yang dibutuhkan
 cd frontend
 npm install
 npm run dev
 ```
 
-Cek berhasil: buka `http://localhost:5173` → otomatis menuju halaman Login
+Cek berhasil: buka `http://localhost:3000` pada browser → otomatis menuju halaman Login
 Peneliti (placeholder). Halaman dengan sidebar dapat dibuka lewat `/guide`,
 `/analysis/new`, `/history`, `/public`, dan `/admin/accounts`.
 
