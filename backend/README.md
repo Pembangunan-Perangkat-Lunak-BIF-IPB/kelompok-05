@@ -74,3 +74,21 @@ Respon JSON:
 
 ### Dokumentasi Interaktif (Swagger UI):
 Akses di http://127.0.0.1:8000/docs
+
+Autentikasi:
+
+POST /api/v1/auth/register — Registrasi akun pengguna baru
+
+POST /api/v1/auth/login — Authentikasi & penerbitan Token JWT
+
+Workbench Analysis:
+
+POST /api/v1/analysis/upload — Unggah berkas sampel (FASTQ, FASTA, IEDB)
+
+GET /api/v1/analysis/{run_id}/status — Cek status pemrosesan analisis
+
+GET /api/v1/analysis/{run_id}/results — Penarikan hasil analisis varian
+
+PATCH /api/v1/analysis/{run_id}/visibility — Update visibilitas (PUBLIC/PRIVATE)
+
+##Spesifikasi Lengkap API: Untuk detail skema request/response dan contoh payload, silakan baca berkas docs/api.md.
