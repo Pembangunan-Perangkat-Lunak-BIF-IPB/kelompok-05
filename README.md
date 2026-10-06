@@ -24,8 +24,14 @@ kelompok-05/
 │   │   ├── layouts/
 │   │   │   ├── Layout.jsx
 │   │   │   └── nav.js
+│   │   ├── lib/
+│   │   │   ├── api.js
+│   │   │   └── validators.js
 │   │   ├── pages/
-│   │   │   └── Placeholder.jsx
+│   │   │   ├── Placeholder.jsx
+│   │   │   ├── Guide.jsx
+│   │   │   ├── NewAnalysis.jsx
+│   │   │   └── pages.css
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
@@ -38,7 +44,7 @@ kelompok-05/
 │   ├── main.py
 │   └── models.py
 └── docs/
-    └── pengujian/               # checklist dan skenario uji (Guruh)
+    └── pengujian/
 ```
 
 ## Prasyarat
