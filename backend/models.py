@@ -1,26 +1,22 @@
 import enum
-import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, BigInteger, Enum, ForeignKey, DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from database import Base
 
-# ==================== 1. ENUM DEFINITIONS ====================
 
+# -------------------------------------------------------------------
+# ENUM DEFINITIONS (Status & Role)
+# -------------------------------------------------------------------
 class UserRole(str, enum.Enum):
-    ADMIN = "ADMIN"
     RESEARCHER = "RESEARCHER"
-    GUEST = "GUEST"
+    PUBLIC = "PUBLIC"
+    ADMIN = "ADMIN"
 
 class UserStatus(str, enum.Enum):
     PENDING_APPROVAL = "PENDING_APPROVAL"
     ACTIVE = "ACTIVE"
-    DEACTIVATED = "DEACTIVATED"
-
-class RunVisibility(str, enum.Enum):
-    PUBLIC = "PUBLIC"
-    PRIVATE = "PRIVATE"
+    REJECTED = "REJECTED"
 
 class RunStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -28,60 +24,102 @@ class RunStatus(str, enum.Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
+class VisibilityType(str, enum.Enum):
+    PRIVATE = "PRIVATE"
+    PUBLIC = "PUBLIC"
+
 class FileType(str, enum.Enum):
     FASTQ_R1 = "FASTQ_R1"
     FASTQ_R2 = "FASTQ_R2"
-    FASTA_REF = "FASTA_REF"
-    IEDB_EPITOPE = "IEDB_EPITOPE"
-
-class ValidationStatus(str, enum.Enum):
-    PASS = "PASS"
-    FAIL = "FAIL"
+    FASTA = "FASTA"
+    IEDB = "IEDB"
 
 
-# ==================== 2. TABLE MODELS ====================
-
+# -------------------------------------------------------------------
+# 1. TABEL USERS & USER_PROFILES (Autentikasi & Akun)
+# -------------------------------------------------------------------
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String(255), unique=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.RESEARCHER)
-    status_aktif = Column(Enum(UserStatus), nullable=False, default=UserStatus.PENDING_APPROVAL)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(SQLEnum(UserRole), default=UserRole.RESEARCHER, nullable=False)
+    status_aktif = Column(SQLEnum(UserStatus), default=UserStatus.PENDING_APPROVAL, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relasi 1:N ke analysis_runs
-    analysis_runs = relationship("AnalysisRun", back_populates="user", cascade="all, delete-orphan")
+    # Relasi 1:1 ke UserProfile
+    profile = relationship("UserProfile", back_populates="user", uselist=False)
+    # Relasi 1:N ke AnalysisRun
+    analysis_runs = relationship("AnalysisRun", back_populates="user")
 
 
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    full_name = Column(String(255), nullable=False)
+    institution = Column(String(255), nullable=True)
+    phone_number = Column(String(50), nullable=True)
+    registration_reason = Column(Text, nullable=True)
+
+    # Relasi balik ke User
+    user = relationship("User", back_populates="profile")
+
+
+# -------------------------------------------------------------------
+# 2. TABEL ANALYSIS_RUNS & UPLOADED_FILES (Workbench & Upload)
+# -------------------------------------------------------------------
 class AnalysisRun(Base):
     __tablename__ = "analysis_runs"
 
-    run_id = Column(String(50), primary_key=True)  # Contoh: 'VE-0142'
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    run_id = Column(String(50), primary_key=True, index=True)  # Format: VE-0001
     sample_name = Column(String(255), nullable=False)
-    visibility = Column(Enum(RunVisibility), nullable=False, default=RunVisibility.PRIVATE)
-    status = Column(Enum(RunStatus), nullable=False, default=RunStatus.PENDING)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
+    status = Column(SQLEnum(RunStatus), default=RunStatus.PENDING, nullable=False)
+    visibility = Column(SQLEnum(VisibilityType), default=VisibilityType.PRIVATE, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relasi
+    # Relasi balik ke User
     user = relationship("User", back_populates="analysis_runs")
-    uploaded_files = relationship("UploadedFile", back_populates="analysis_run", cascade="all, delete-orphan")
+    # Relasi 1:N ke UploadedFile
+    uploaded_files = relationship("UploadedFile", back_populates="analysis_run")
+    # Relasi 1:N ke VariantResult
+    variant_results = relationship("VariantResult", back_populates="analysis_run")
 
 
 class UploadedFile(Base):
     __tablename__ = "uploaded_files"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    run_id = Column(String(50), ForeignKey("analysis_runs.run_id", ondelete="CASCADE"), nullable=False)
-    file_type = Column(Enum(FileType), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    run_id = Column(String(50), ForeignKey("analysis_runs.run_id"), nullable=False)
+    file_type = Column(SQLEnum(FileType), nullable=False)
     file_name = Column(String(255), nullable=False)
-    file_path = Column(String(512), nullable=False)
-    file_size_bytes = Column(BigInteger, nullable=False)
-    validation_status = Column(Enum(ValidationStatus), nullable=False, default=ValidationStatus.PASS)
+    file_path = Column(String(500), nullable=False)
+    validation_status = Column(String(50), default="PASS", nullable=False)  # PASS / FAIL
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relasi
+    # Relasi balik ke AnalysisRun
     analysis_run = relationship("AnalysisRun", back_populates="uploaded_files")
+
+
+# -------------------------------------------------------------------
+# 3. TABEL VARIANT_RESULTS (Hasil Analisis Varian)
+# -------------------------------------------------------------------
+class VariantResult(Base):
+    __tablename__ = "variant_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    run_id = Column(String(50), ForeignKey("analysis_runs.run_id"), nullable=False)
+    position = Column(Integer, nullable=False)
+    ref_allele = Column(String(50), nullable=False)
+    alt_allele = Column(String(50), nullable=False)
+    qual = Column(String(50), nullable=True)
+    dp = Column(Integer, nullable=True)
+    snpeff_effect = Column(String(255), nullable=True)
+    grantham_score = Column(Integer, nullable=True)
+    risk_level = Column(String(50), nullable=True)
+
+    # Relasi balik ke AnalysisRun
+    analysis_run = relationship("AnalysisRun", back_populates="variant_results")
