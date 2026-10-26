@@ -1,0 +1,3 @@
+epitope_id,start_pos,end_pos,protein,sequence
+EPI_001,10,25,Spike,AACCAACCAACTTTC
+EPI_002,50,70,Spike,GCTGTCACTCGGCTGCATGC
