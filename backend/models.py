@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Enum as SQLEnum, func
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -42,15 +42,13 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(SQLEnum(UserRole), default=UserRole.RESEARCHER, nullable=False)
-    status_aktif = Column(SQLEnum(UserStatus), default=UserStatus.PENDING_APPROVAL, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(SQLEnum(UserRole, name="userrole"), nullable=False, default=UserRole.PUBLIC)
+    status_aktif = Column(SQLEnum(UserStatus, name="userstatus"), nullable=False, default=UserStatus.ACTIVE)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relasi 1:1 ke UserProfile
     profile = relationship("UserProfile", back_populates="user", uselist=False)
-    # Relasi 1:N ke AnalysisRun
     analysis_runs = relationship("AnalysisRun", back_populates="user")
 
 
@@ -64,9 +62,7 @@ class UserProfile(Base):
     phone_number = Column(String(50), nullable=True)
     registration_reason = Column(Text, nullable=True)
 
-    # Relasi balik ke User
     user = relationship("User", back_populates="profile")
-
 
 # -------------------------------------------------------------------
 # 2. TABEL ANALYSIS_RUNS & UPLOADED_FILES (Workbench & Upload)
