@@ -130,17 +130,17 @@ Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status
 
 ### 4. Jalankan frontend
 
+Buka terminal **baru** (biarkan terminal backend tetap berjalan), lalu dari folder `kelompok-05`:
+
 ```bash
-# Jalankan perintah berikut pada Terminal Command Prompt
-# Pindah direktori ke folder kelompok-05 yang berisi semua file yang dibutuhkan
 cd frontend
 npm install
 npm run dev
 ```
 
-Cek berhasil: buka `http://localhost:3000` pada browser → otomatis menuju halaman Login
-Peneliti (placeholder). Halaman dengan sidebar dapat dibuka lewat `/guide`,
-`/analysis/new`, `/history`, `/public`, dan `/admin/accounts`.
+Cek berhasil: buka `http://localhost:3000` di browser, otomatis menuju halaman **Login Peneliti**. Buat akun lewat `/register`, lalu login. Setelah login, halaman bersidebar dapat dibuka lewat `/guide`, `/analysis/new`, dan `/history`.
+
+> Pastikan `backend/.env` berisi `ALLOWED_ORIGINS=http://localhost:3000`, dan backend sudah berjalan di port 8000. Tanpa itu, login dan unggah gagal dengan error CORS atau "Server tidak dapat dihubungi".
 
 ## Kendala Umum
 
