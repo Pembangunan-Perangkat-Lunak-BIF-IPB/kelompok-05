@@ -23,6 +23,7 @@ kelompok-05/
 │   ├── src/
 │   │   ├── layouts/
 │   │   │   ├── Layout.jsx
+│   │   │   ├── RequireAuth.jsx
 │   │   │   └── nav.js
 │   │   ├── lib/
 │   │   │   ├── api.js
@@ -30,21 +31,52 @@ kelompok-05/
 │   │   ├── pages/
 │   │   │   ├── Placeholder.jsx
 │   │   │   ├── Guide.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
 │   │   │   ├── NewAnalysis.jsx
-│   │   │   └── pages.css
+│   │   │   ├── Progress.jsx
+│   │   │   ├── Result.jsx
+│   │   │   ├── History.jsx
+│   │   │   ├── pages.css
+│   │   │   └── auth.css
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
 │   ├── index.html
 │   ├── package.json
+│   ├── package-lock.json
 │   └── vite.config.js
 ├── backend/
+│   ├── data/
+│   │   └── references/
+│   │       └── reference.fasta 
+│   ├── docs/
+│   │   └── api.md
+│   ├── routers/
+│   │   ├── auth.py
+│   │   └── analysis.py
+│   ├── schemas/
+│   │   ├── auth.py
+│   │   └── analysis.py
+│   ├── utils/
+│   │   ├── pipeline.py
+│   │   ├── validators.py
+│   │   └── vcf_parser.py
+│   ├── .env                 
 │   ├── .gitignore
+│   ├── README.md
 │   ├── database.py
 │   ├── main.py
-│   └── models.py
+│   ├── models.py
+│   ├── requirements.txt
+│   ├── security.py
+│   └── uploads/             
 └── docs/
     └── pengujian/
+
 ```
 
 ## Prasyarat
