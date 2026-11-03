@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getStatus } from '../lib/api'
+import { getStatus, lastRun } from '../lib/api'
 import './pages.css'
 
 const POLL_MS = 3000
@@ -14,6 +14,7 @@ export default function Progress() {
   useEffect(() => {
     let stop = false
     let timer
+    lastRun.set(runId)
 
     async function tick() {
       try {
@@ -21,11 +22,11 @@ export default function Progress() {
         if (stop) return
         setData(d)
         setError('')
-        if (!DONE.includes(d.status)) timer = setTimeout(tick, POLL_MS)
+        if (!DONE.includes(d.overall_status ?? d.status)) timer = setTimeout(tick, POLL_MS)
       } catch (err) {
         if (stop) return
         setError(err.message)
-        timer = setTimeout(tick, POLL_MS * 2)
+        if (err.status !== 404) timer = setTimeout(tick, POLL_MS * 2)
       }
     }
 
@@ -33,18 +34,27 @@ export default function Progress() {
     return () => { stop = true; clearTimeout(timer) }
   }, [runId])
 
-  const stations = data?.stations_status_list ?? data?.stations ?? []
+  const overall = data?.overall_status ?? data?.status
+  const stations = data?.stations ?? data?.stations_status_list ?? data?.pipeline_stations ?? []
+  const logs = data?.pipeline_logs ?? []
+  const badge = overall === 'COMPLETED' ? 'ok' : overall === 'FAILED' ? 'bad' : 'wait'
 
   return (
     <div className="page">
       <header>
         <h1>Progres analisis {runId}</h1>
         <p className="muted">
-          {data ? <>Sampel <strong>{data.sample_name}</strong> · status <strong>{data.status}</strong></> : 'Memuat status…'}
+          {data ? <>Sampel <strong>{data.sample_name}</strong></> : 'Memuat status…'}
+          {overall && <> · <span className={`badge ${badge}`}>{overall}</span></>}
         </p>
       </header>
 
       {error && <p className="msg bad" role="alert">{error}</p>}
+      {overall === 'FAILED' && (
+        <p className="msg bad" role="alert">
+          Pipeline berhenti karena kegagalan pada salah satu stasiun. Periksa log backend, lalu unggah ulang berkas.
+        </p>
+      )}
 
       <section className="card">
         <div className="table-wrap">
@@ -63,6 +73,15 @@ export default function Progress() {
           </table>
         </div>
       </section>
+
+      {logs.length > 0 && (
+        <section className="card">
+          <h3>Log pipeline</h3>
+          <pre className="muted" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+            {logs.map((l) => `[${l.timestamp ?? ''}] S${l.station_number ?? '?'} ${l.log_level ?? ''} ${l.message ?? ''}`).join('\n')}
+          </pre>
+        </section>
+      )}
 
       <section className="card row-between">
         <Link className="btn" to="/analysis/new">Analisis baru</Link>

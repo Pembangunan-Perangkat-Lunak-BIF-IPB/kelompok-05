@@ -1,12 +1,19 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { lastRun, logout } from '../lib/api'
 
 export default function Layout({ role, links }) {
+  useLocation()
+  const last = lastRun.get()
+  const items = links
+    .filter((l) => !l.to.includes(':last') || last)
+    .map((l) => ({ ...l, to: l.to.replace(':last', last ?? '') }))
+
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="brand">VarEscape</div>
         <nav>
-          {links.map((l) => (
+          {items.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
@@ -16,7 +23,7 @@ export default function Layout({ role, links }) {
             </NavLink>
           ))}
         </nav>
-        <NavLink to="/register" className="nav logout">Keluar</NavLink>
+        <NavLink to="/login" className="nav logout" onClick={logout}>Keluar</NavLink>
       </aside>
       <div className="main">
         <header className="header">{role}</header>

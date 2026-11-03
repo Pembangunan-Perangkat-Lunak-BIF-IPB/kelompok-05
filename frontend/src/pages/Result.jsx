@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getResults, setVisibility } from '../lib/api'
+import { getResults, lastRun, setVisibility } from '../lib/api'
 import './pages.css'
 
 export default function Result() {
@@ -11,6 +11,7 @@ export default function Result() {
 
   useEffect(() => {
     let stop = false
+    lastRun.set(runId)
     getResults(runId)
       .then((d) => { if (!stop) { setData(d); setError('') } })
       .catch((err) => { if (!stop) setError(err.message) })

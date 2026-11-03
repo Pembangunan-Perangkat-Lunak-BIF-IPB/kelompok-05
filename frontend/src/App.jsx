@@ -5,6 +5,10 @@ import Guide from './pages/Guide'
 import NewAnalysis from './pages/NewAnalysis'
 import Progress from './pages/Progress'
 import Result from './pages/Result'
+import History from './pages/History'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import RequireAuth from './layouts/RequireAuth'
 import { researcherLinks, readerLinks, adminLinks } from './layouts/nav'
 
 export default function App() {
@@ -13,18 +17,20 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* Halaman tanpa sidebar */}
-      <Route path="/login" element={<Placeholder title="Login Peneliti" />} />
-      <Route path="/register" element={<Placeholder title="Daftar Akun Baru" />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/guest/login" element={<Placeholder title="Login Pembaca" />} />
       <Route path="/admin/login" element={<Placeholder title="Login Administrator" />} />
 
       {/* Peneliti */}
-      <Route element={<Layout role="Peneliti" links={researcherLinks} />}>
-        <Route path="/guide" element={<Guide />} />
-        <Route path="/analysis/new" element={<NewAnalysis />} />
-        <Route path="/analysis/:runId/progress" element={<Progress />} />
-        <Route path="/analysis/:runId/result" element={<Result />} />
-        <Route path="/history" element={<Placeholder title="Riwayat Analisis" />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<Layout role="Peneliti" links={researcherLinks} />}>
+          <Route path="/guide" element={<Guide />} />
+          <Route path="/analysis/new" element={<NewAnalysis />} />
+          <Route path="/analysis/:runId/progress" element={<Progress />} />
+          <Route path="/analysis/:runId/result" element={<Result />} />
+          <Route path="/history" element={<History />} />
+        </Route>
       </Route>
 
       {/* Pembaca */}

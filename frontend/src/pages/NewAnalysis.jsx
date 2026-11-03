@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { validateFormat, splitFastqPair, formatSize } from '../lib/validators'
-import { uploadAnalysis, runAnalysis } from '../lib/api'
+import { uploadAnalysis, runAnalysis, lastRun } from '../lib/api'
 import './pages.css'
 
 const ROWS = [
@@ -42,12 +42,12 @@ export default function NewAnalysis() {
   const [files, setFiles] = useState({})
   const [checks, setChecks] = useState({})
   const [pairError, setPairError] = useState('')
-  const [status, setStatus] = useState('idle') // idle | loading | success | error
+  const [status, setStatus] = useState('idle')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [inputKey, setInputKey] = useState(0)
-  const [isStarting, setIsStarting] = useState(false) // State loading untuk tombol eksekusi
+  const [isStarting, setIsStarting] = useState(false)
   const filesRef = useRef({})
   const checksRef = useRef({})
 
@@ -62,7 +62,6 @@ export default function NewAnalysis() {
     setNotice('')
   }
 
-  // Unggah otomatis begitu keempat berkas lolos Lapis 1
   async function uploadIfReady() {
     const f = filesRef.current
     const c = checksRef.current
@@ -71,10 +70,10 @@ export default function NewAnalysis() {
     setError('')
     try {
       const data = await uploadAnalysis({
-        // Gunakan nama bawaan jika kolom opsional dikosongkan (cegah error 422)
         sampleName: sampleName.trim() || 'Sampel Uji Coba',
         r1: f.r1, r2: f.r2, fasta: f.fasta, iedb: f.iedb,
       })
+      lastRun.set(data.run_id)
       setResult(data)
       setStatus('success')
     } catch (err) {
@@ -83,7 +82,6 @@ export default function NewAnalysis() {
     }
   }
 
-  // Picu analisis pipeline backend lalu arahkan ke halaman progress
   async function handleRunAnalysis() {
     if (!result?.run_id) return
     setIsStarting(true)

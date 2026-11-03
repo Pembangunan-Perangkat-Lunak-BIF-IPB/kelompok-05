@@ -1,8 +1,8 @@
 export const researcherLinks = [
   { to: '/guide', label: 'Panduan' },
   { to: '/analysis/new', label: 'Analisis Baru' },
-  { to: '/analysis/VE-0142/progress', label: 'Progres' },
-  { to: '/analysis/VE-0142/result', label: 'Hasil' },
+  { to: '/analysis/:last/progress', label: 'Progres' },
+  { to: '/analysis/:last/result', label: 'Hasil' },
   { to: '/history', label: 'Riwayat Analisis' },
 ]
 
