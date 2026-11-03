@@ -1,10 +1,13 @@
 import jwt
+import os
+from datetime import datetime, timedelta
+from typing import Optional
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-SECRET_KEY = "kunci_rahasia_varescape_jwt"
+SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 

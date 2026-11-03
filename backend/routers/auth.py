@@ -18,12 +18,19 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     
     hashed_pwd = get_password_hash(user_data.password)
     
-    new_user = models.User(
-        email=user_data.email, 
-        hashed_password=hashed_pwd,
-        role=user_data.role,
-        status_aktif=models.UserStatus.ACTIVE
+    initial_status = (
+        models.UserStatus.PENDING_APPROVAL 
+        if user_data.role != "ADMIN" 
+        else models.UserStatus.ACTIVE
     )
+
+    new_user = models.User(
+    email=user_data.email,
+    hashed_password=hashed_pwd,
+    role=user_data.role,
+    status_aktif=initial_status  
+    )
+
     db.add(new_user)
     db.flush()
 
@@ -52,4 +59,13 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
         )
     
     access_token = create_access_token(data={"sub": str(user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+            "status_aktif": user.status_aktif
+        }
+    }

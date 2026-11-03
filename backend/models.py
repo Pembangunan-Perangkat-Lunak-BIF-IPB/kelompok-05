@@ -47,7 +47,6 @@ class User(Base):
     role = Column(SQLEnum(UserRole, name="userrole"), nullable=False, default=UserRole.PUBLIC)
     status_aktif = Column(SQLEnum(UserStatus, name="userstatus"), nullable=False, default=UserStatus.ACTIVE)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
     profile = relationship("UserProfile", back_populates="user", uselist=False)
     analysis_runs = relationship("AnalysisRun", back_populates="user")
 
@@ -76,7 +75,9 @@ class AnalysisRun(Base):
     visibility = Column(SQLEnum(VisibilityType), default=VisibilityType.PRIVATE, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    
     # Relasi balik ke User
     user = relationship("User", back_populates="analysis_runs")
     # Relasi 1:N ke UploadedFile

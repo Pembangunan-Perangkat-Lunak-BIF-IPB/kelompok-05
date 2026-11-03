@@ -16,6 +16,7 @@ Dokumen ini berisi spesifikasi teknis antarmuka *Application Programming Interfa
   * `201 Created`: Data/sumber daya baru berhasil dibuat.
   * `400 Bad Request`: Input data tidak valid.
   * `401 Unauthorized`: Token JWT tidak valid atau kedaluwarsa.
+  * `403 Forbidden`: Akses ditolak (misalnya pengguna mengakses data PRIVATE milik pengguna lain).
   * `404 Not Found `: Sumber daya (seperti run_id) tidak ditemukan.
   * `422 Unprocessable Entity`: Error validasi skema data dari FastAPI.
   * `500 Internal Server Error`: Kesalahan pada sisi server/database.
@@ -43,7 +44,7 @@ Memeriksa status operasional server *backend* dan koneksi database PostgreSQL.
 ## 3. Endpoint Autentikasi & Pengguna
 
 ### 3.1. Registrasi Pengguna Baru (`UC-01`)
-Mendaftarkan akun peneliti baru ke dalam sistem.
+Mendaftarkan akun peneliti baru ke dalam sistem dengan status awal PENDING_APPROVAL
 
 * **URL**: `/auth/register`
 * **Method**: `POST`
@@ -86,7 +87,13 @@ Autentikasi akun dan penerbitan JSON Web Token (JWT).
   ```json
   {
   "access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer"
+  "token_type": "bearer",
+  "user": {
+  "id": 1,
+  "email": "researcher@lab.ac.id",
+  "role": "PENELITI",
+  "status_aktif": "PENDING_APPROVAL"
+    }
   }
   ```
 
@@ -218,38 +225,63 @@ Mengambil status aktual dari 5 tahapan stasiun pemrosesan pipeline.
   ```
 ---
 ### 4.5. Ambil Hasil Analisis Varian
-Mengambil daftar variansi mutasi genom hasil pemrosesan pipeline dari tabel database variant_results.
+Mengambil daftar varian mutasi genom hasil penyaringan PASS dari tabel variant_results beserta ringkasan metrik sekuensing.
 
 * **URL**: `/analysis/{run_id}/results`
 * **Method**: `GET`
 * Headers**: `Authorization: Bearer <jwt_token>`
 * **Path Parameter**: `run_id` *(string)*- Contoh: VE-C48A
+* **Query Parameters (Optional)** :
+* `risk_level` *(string)*: Filter tingkat risiko (HIGH, MODERATE, LOW, OUTSIDE_EPITOPE).
+
+* `snpeff_effect` *(string)*: Filter kata kunci anotasi efek SnpEff.
+
+* `min_pos` *(integer)*: Batas koordinat posisi genom minimal.
+
+* `max_pos` *(integer)*: Batas koordinat posisi genom maksimal. 
+
+* **Aturan Pengurutan Default (Default Sorting)**:
+* Urutan Risiko: `HIGH` $\rightarrow$ `MODERATE` $\rightarrow$ `LOW` $\rightarrow$ `OUTSIDE_EPITOPE`
+
+* Urutan Posisi Genom (`pos`) secara ascending (jika memiliki tingkat risiko yang sama).
+
+* **Penegakan Keamanan** : Mengembalikan `403 Forbidden` jika analisis berstatus `PRIVATE` dan diakses oleh pengguna yang bukan pembuatnya.
 * **Response (`200 OK`)**:
   ```json
   {
   "run_id": "VE-C48A",
   "sample_name": "sampel uji 1",
+  "status": "COMPLETED",
   "visibility": "PUBLIC",
-  "total_variants": 1,
-  "variant_results": [
+  "started_at": "2026-10-26T10:01:00Z",
+  "completed_at": "2026-10-26T10:03:00Z",
+  "summary_metrics": {
+    "q20_rate": 98.5,
+    "q30_rate": 95.2,
+    "mapping_rate": 99.1,
+    "mean_depth": 120.4,
+    "tstv_ratio": 2.1,
+    "total_variants": 1
+  },
+  "variants": [
     {
       "id": 1,
       "run_id": "VE-C48A",
-      "position": 21563,
-      "ref_allele": "A",
-      "alt_allele": "G",
-      "qual": "225",
-      "dp": 45,
-      "snpeff_effect": null,
-      "grantham_score": null,
-      "risk_level": null
+      "pos": 23063,
+      "ref": "A",
+      "alt": "T",
+      "qual": 228.0,
+      "dp": 412,
+      "snpeff_effect": "S: p.Asn501Tyr (missense)",
+      "grantham_score": 143,
+      "risk_level": "HIGH"
     }
   ]
   }
   ```
 ---
 ### 4.6. Ubah Visibilitas Hasil Analisis
-Mengatur status akses publikasi analisis (PUBLIC atau PRIVATE).
+Mengatur status akses publikasi analisis (`PUBLIC` atau `PRIVATE`).
 
 * **URL**: `/analysis/{run_id}/visibility`
 * **Method**: `PATCH`
@@ -269,3 +301,79 @@ Mengatur status akses publikasi analisis (PUBLIC atau PRIVATE).
     "message": "Visibilitas analisis berhasil diperbarui."
   }
   ```
+  ---
+
+## 5. Endpoint Publik (Guest Access - Tanpa Token JWT)
+Endpoint pada bagian ini disajikan untuk aktor Pembaca Publik / Guest tanpa perlu melakukan login atau mengirimkan header `Authorization`.
+### 5.1. Ambil Katalog Analisis Publik
+Mengambil daftar analisis yang berstatus `visibility = 'PUBLIC'`.
+
+* **URL**: `/public/analyses`
+* **Method**: `GET`
+* **Autentikasi**: Tidak diperlukan
+* **Response** (`200 OK`):
+```json
+[
+  {
+    "run_id": "VE-C48A",
+    "sample_name": "sampel uji 1",
+    "status": "COMPLETED",
+    "visibility": "PUBLIC",
+    "created_at": "2026-10-26T10:00:00Z",
+    "started_at": "2026-10-26T10:01:00Z",
+    "completed_at": "2026-10-26T10:03:00Z"
+  }
+]
+
+```
+---
+### 5.2. Ambil Detail Hasil Analisis Publik
+Mengambil detail hasil varian dan ringkasan metrik khusus untuk analisis yang berstatus `PUBLIC`.
+
+* **URL**: `/public/analyses/{run_id}/results`
+* **Method**: `GET`
+* **Autentikasi**: Tidak diperlukan
+* **Path Parameter**: `run_id` *(string)*- Contoh: VE-C48A
+* **Query Parameters (Optional)** :
+* `risk_level` *(string)*: Filter tingkat risiko (HIGH, MODERATE, LOW, OUTSIDE_EPITOPE).
+
+* `snpeff_effect` *(string)*: Filter kata kunci anotasi efek SnpEff.
+
+* `min_pos` *(integer)*: Batas koordinat posisi genom minimal.
+
+* `max_pos` *(integer)*: Batas koordinat posisi genom maksimal. 
+
+* **Penegakan Keamanan** : Mengembalikan `403 Forbidden` jika `run_id` berstatus `PRIVATE`
+
+* **Response** (`200 OK`):
+```json
+{
+  "run_id": "VE-C48A",
+  "sample_name": "sampel uji 1",
+  "status": "COMPLETED",
+  "visibility": "PUBLIC",
+  "started_at": "2026-10-26T10:01:00Z",
+  "completed_at": "2026-10-26T10:03:00Z",
+  "summary_metrics": {
+    "q20_rate": 98.5,
+    "q30_rate": 95.2,
+    "mapping_rate": 99.1,
+    "mean_depth": 120.4,
+    "tstv_ratio": 2.1,
+    "total_variants": 1
+  },
+  "variants": [
+    {
+      "id": 1,
+      "run_id": "VE-C48A",
+      "pos": 23063,
+      "ref": "A",
+      "alt": "T",
+      "qual": 228.0,
+      "dp": 412,
+      "snpeff_effect": "S: p.Asn501Tyr (missense)",
+      "grantham_score": 143,
+      "risk_level": "HIGH"
+    }
+  ]
+}

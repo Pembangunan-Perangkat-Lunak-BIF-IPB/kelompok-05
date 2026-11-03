@@ -1,9 +1,11 @@
 import os
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks, Query
 from utils.pipeline import run_analysis_pipeline
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
+from sqlalchemy import case
 
 import models
 from database import SessionLocal, get_db
@@ -137,42 +139,131 @@ def get_analysis_status(
     if not run:
         raise HTTPException(status_code=404, detail="Sesi analisis tidak ditemukan")
 
+    # 1. Ambil log pipeline dari database (jika model PipelineLog ada)
+    pipeline_logs = []
+    if hasattr(models, 'PipelineLog'):
+        logs_db = db.query(models.PipelineLog).filter(
+            models.PipelineLog.run_id == run_id
+        ).order_by(models.PipelineLog.created_at.asc()).all()
+        
+        pipeline_logs = [
+            {
+                "station_number": log.station_number,
+                "timestamp": log.created_at.strftime("%H:%M:%S") if hasattr(log, 'created_at') else "",
+                "log_level": log.log_level,
+                "message": log.message
+            }
+            for log in logs_db
+        ]
+
+    # 2. Tentukan status per stasiun (sekuensial atau berdasarkan log/status stasiun)
+    stations_def = [
+        (1, "Quality Control (fastp)"),
+        (2, "Read Mapping (BWA-MEM2)"),
+        (3, "Variant Calling (BCFtools)"),
+        (4, "Quality Filtering"),
+        (5, "Epitope Mapping & Grantham")
+    ]
+
     # Tentukan status stasiun berdasarkan run.status
-    station_status = "COMPLETED" if run.status == models.RunStatus.COMPLETED else (
-        "RUNNING" if run.status == models.RunStatus.RUNNING else "PENDING"
-    )
+    stations_status_list = []
+    for st_num, st_name in stations_def:
+        if run.status == models.RunStatus.COMPLETED:
+            st_status = "COMPLETED"
+        elif run.status == models.RunStatus.FAILED:
+            st_status = "FAILED"
+        elif run.status == models.RunStatus.RUNNING:
+            # Jika sedang berjalan, stasiun 1 COMPLETED/RUNNING, sisanya PENDING (atau sesuaikan dengan DB)
+            st_status = "RUNNING" if st_num == 1 else "PENDING"
+        else:
+            st_status = "PENDING"
+
+        stations_status_list.append({
+            "station": st_num,
+            "name": st_name,
+            "status": st_status
+        })
 
     return {
         "run_id": run.run_id,
         "sample_name": run.sample_name,
         "overall_status": run.status,
-        "stations": [
-            {"station": 1, "name": "Quality Control (fastp)", "status": station_status},
-            {"station": 2, "name": "Read Mapping (BWA-MEM2)", "status": station_status},
-            {"station": 3, "name": "Variant Calling (BCFtools)", "status": station_status},
-            {"station": 4, "name": "Quality Filtering", "status": station_status},
-            {"station": 5, "name": "Epitope Mapping & Grantham", "status": station_status}
-        ]
+        "stations": stations_status_list,
+        "pipeline_logs": pipeline_logs
     }
 
 
 @router.get("/{run_id}/results", dependencies=[Depends(security)])
-def get_analysis_results(run_id: str, db: Session = Depends(get_db)):
+def get_analysis_results(
+    run_id: str,
+    risk_level: Optional[str] = Query(None, description="Filter berdasarkan risk level (HIGH, MODERATE, LOW, OUTSIDE_EPITOPE)"),
+    snpeff_effect: Optional[str] = Query(None, description="Filter berdasarkan anotasi efek SnpEff"),
+    min_pos: Optional[int] = Query(None, description="Posisi genom minimal"),
+    max_pos: Optional[int] = Query(None, description="Posisi genom maksimal"),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # 1. Cek keberadaan sesi analisis (AnalysisRun)
     run = db.query(models.AnalysisRun).filter(models.AnalysisRun.run_id == run_id).first()
     if not run:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Sesi analisis dengan run_id '{run_id}' tidak ditemukan"
+            detail="Sesi analisis tidak ditemukan."
         )
 
-    results = db.query(models.VariantResult).filter(models.VariantResult.run_id == run_id).all()
+    # 2. Penegakan Keamanan: Hasil PRIVATE hanya bisa diakses oleh pemiliknya
+    if run.user_id != current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Anda tidak memiliki hak akses untuk melihat hasil analisis PRIVATE ini."
+        )
 
+    # 3. Buat Base Query ke tabel VariantResult
+    query = db.query(models.VariantResult).filter(models.VariantResult.run_id == run_id)
+
+    # 4. Terapkan Filter Query jika dikirimkan oleh Frontend
+    if risk_level:
+        query = query.filter(models.VariantResult.risk_level == risk_level.upper())
+    if snpeff_effect:
+        query = query.filter(models.VariantResult.snpeff_effect.ilike(f"%{snpeff_effect}%"))
+    if min_pos is not None:
+        query = query.filter(models.VariantResult.position >= min_pos)
+    if max_pos is not None:
+        query = query.filter(models.VariantResult.position <= max_pos)
+
+    # 5. Menerapkan Urutan Default (Default Sorting) sesuai Spesifikasi SA
+    # Hirarki: HIGH (1) -> MODERATE (2) -> LOW (3) -> OUTSIDE_EPITOPE (4), lalu POS (asc)
+    risk_hierarchy = case(
+        {
+            "HIGH": 1,
+            "MODERATE": 2,
+            "LOW": 3,
+            "OUTSIDE_EPITOPE": 4
+        },
+        value=models.VariantResult.risk_level,
+        else_=5
+    )
+    
+    variants = query.order_by(risk_hierarchy, models.VariantResult.position.asc()).all()
+
+    # 6. Kembalikan Kartu Ringkasan Metrik Run + Daftar Varian VCF
     return {
         "run_id": run.run_id,
         "sample_name": run.sample_name,
+        "status": run.status,
         "visibility": run.visibility,
-        "total_variants": len(results),
-        "variant_results": results
+        "started_at": run.started_at,
+        "completed_at": run.completed_at,
+        # Ganti bagian summary_metrics dengan versi aman ini:
+        "summary_metrics": {
+            "q20_rate": getattr(run, "q20_rate", None),
+            "q30_rate": getattr(run, "q30_rate", None),
+            "mapping_rate": getattr(run, "mapping_rate", None),
+            "mean_depth": getattr(run, "mean_depth", None),
+            "tstv_ratio": getattr(run, "tstv_ratio", None),
+            "total_variants": len(variants)
+        },
+        "variants": variants
     }
 
 

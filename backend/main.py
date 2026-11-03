@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 import models
 from database import engine, get_db
-from routers import auth, analysis
+from routers import auth, analysis, public
 
 load_dotenv()
 
@@ -25,6 +25,8 @@ security = HTTPBearer()
 raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 origins = [origin.strip() for origin in raw_origins.split(",")]
 
+app= FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -35,6 +37,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(analysis.router)
+app.include_router(public.router)
 
 @app.get("/", tags=["Infrastruktur"])
 def root():
