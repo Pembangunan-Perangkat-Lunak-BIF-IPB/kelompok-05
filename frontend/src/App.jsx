@@ -8,6 +8,9 @@ import Result from './pages/Result'
 import History from './pages/History'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import PublicFiles from './pages/PublicFiles'
+import PublicHistory from './pages/PublicHistory'
+import PublicResult from './pages/PublicResult'
 import RequireAuth from './layouts/RequireAuth'
 import { researcherLinks, readerLinks, adminLinks } from './layouts/nav'
 
@@ -19,7 +22,7 @@ export default function App() {
       {/* Halaman tanpa sidebar */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/guest/login" element={<Placeholder title="Login Pembaca" />} />
+      <Route path="/public/login" element={<Placeholder title="Login Pembaca Publik" />} />
       <Route path="/admin/login" element={<Placeholder title="Login Administrator" />} />
 
       {/* Peneliti */}
@@ -34,10 +37,10 @@ export default function App() {
       </Route>
 
       {/* Pembaca */}
-      <Route element={<Layout role="Pembaca Publik" links={readerLinks} />}>
-        <Route path="/public" element={<Placeholder title="Berkas Publik" />} />
-        <Route path="/public/history" element={<Placeholder title="Riwayat Berkas" />} />
-        <Route path="/public/:runId/result" element={<Placeholder title="Hasil Berkas Publik" />} />
+      <Route element={<Layout role="Pembaca Publik" links={readerLinks} reader />}>
+        <Route path="/public" element={<PublicFiles />} />
+        <Route path="/public/history" element={<PublicHistory />} />
+        <Route path="/public/:runId/result" element={<PublicResult />} />
       </Route>
 
       {/* Administrator */}

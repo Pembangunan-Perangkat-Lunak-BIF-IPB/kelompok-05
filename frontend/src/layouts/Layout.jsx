@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { lastRun, logout } from '../lib/api'
 
-export default function Layout({ role, links }) {
+export default function Layout({ role, links, reader = false }) {
   useLocation()
   const last = lastRun.get()
   const items = links
@@ -23,7 +23,9 @@ export default function Layout({ role, links }) {
             </NavLink>
           ))}
         </nav>
-        <NavLink to="/login" className="nav logout" onClick={logout}>Keluar</NavLink>
+        {reader
+          ? <NavLink to="/login" className="nav logout">Login Peneliti</NavLink>
+          : <NavLink to="/login" className="nav logout" onClick={logout}>Keluar</NavLink>}
       </aside>
       <div className="main">
         <header className="header">{role}</header>

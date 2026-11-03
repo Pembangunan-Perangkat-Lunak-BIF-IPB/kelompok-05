@@ -2,9 +2,21 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getStatus, lastRun } from '../lib/api'
 import './pages.css'
+import '../components/result.css'
 
 const POLL_MS = 3000
 const DONE = ['COMPLETED', 'FAILED']
+
+function groupLogs(logs) {
+  const map = new Map()
+  logs.forEach((l) => {
+    const k = l.station_number ?? '?'
+    map.set(k, [...(map.get(k) ?? []), l])
+  })
+  return [...map.entries()].sort((a, b) => Number(a[0]) - Number(b[0]))
+}
+
+const stationName = (stations, num) => stations.find((s) => String(s.station) === String(num))?.name
 
 export default function Progress() {
   const { runId } = useParams()
@@ -74,14 +86,20 @@ export default function Progress() {
         </div>
       </section>
 
-      {logs.length > 0 && (
-        <section className="card">
-          <h3>Log pipeline</h3>
-          <pre className="muted" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-            {logs.map((l) => `[${l.timestamp ?? ''}] S${l.station_number ?? '?'} ${l.log_level ?? ''} ${l.message ?? ''}`).join('\n')}
-          </pre>
-        </section>
-      )}
+      <section className="card">
+        <h3>Log pipeline per stasiun</h3>
+        {!logs.length && <p className="muted">Belum ada log. Log muncul setelah stasiun mulai berjalan.</p>}
+        {groupLogs(logs).map(([num, items]) => (
+          <details key={num} className="log-group" open={items.some((l) => l.log_level === 'ERROR')}>
+            <summary>Stasiun {num}{stationName(stations, num) ? ` · ${stationName(stations, num)}` : ''} ({items.length} log)</summary>
+            {items.map((l, i) => (
+              <p key={i} className={`log-line ${l.log_level ?? ''}`}>
+                {`[${l.timestamp ?? ''}] ${l.log_level ?? ''} ${l.message ?? ''}`}
+              </p>
+            ))}
+          </details>
+        ))}
+      </section>
 
       <section className="card row-between">
         <Link className="btn" to="/analysis/new">Analisis baru</Link>
