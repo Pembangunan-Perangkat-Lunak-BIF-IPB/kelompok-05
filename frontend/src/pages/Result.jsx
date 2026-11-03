@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getResults, lastRun, setVisibility } from '../lib/api'
+import ResultViewer from '../components/ResultViewer'
 import './pages.css'
 
 export default function Result() {
@@ -8,6 +9,7 @@ export default function Result() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     let stop = false
@@ -21,10 +23,14 @@ export default function Result() {
   async function toggleVisibility() {
     const next = data.visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC'
     setSaving(true)
+    setNotice('')
     try {
       const r = await setVisibility(runId, next)
       setData((d) => ({ ...d, visibility: r.visibility }))
       setError('')
+      setNotice(r.visibility === 'PUBLIC'
+        ? 'Hasil kini PUBLIC dan dapat dibaca Pembaca Publik.'
+        : 'Hasil kini PRIVATE dan hanya dapat dilihat Anda.')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -32,14 +38,12 @@ export default function Result() {
     }
   }
 
-  const variants = data?.variant_results ?? []
-
   return (
     <div className="page">
       <header>
         <h1>Hasil analisis {runId}</h1>
         <p className="muted">
-          {data ? <>Sampel <strong>{data.sample_name}</strong> · {data.total_variants} varian</> : 'Memuat hasil…'}
+          {data ? <>Sampel <strong>{data.sample_name}</strong> · {data.total_variants ?? data.variant_results?.length ?? 0} varian</> : 'Memuat hasil…'}
         </p>
       </header>
 
@@ -48,31 +52,17 @@ export default function Result() {
       {data && (
         <>
           <section className="card row-between">
-            <span>Visibilitas: <strong>{data.visibility}</strong></span>
+            <span>
+              Visibilitas: <strong>{data.visibility}</strong>
+              <span className="muted"> — PRIVATE hanya untuk pemilik, PUBLIC dapat dibaca Pembaca Publik.</span>
+            </span>
             <button className="btn" onClick={toggleVisibility} disabled={saving}>
-              Jadikan {data.visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC'}
+              {saving ? 'Menyimpan…' : `Jadikan ${data.visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC'}`}
             </button>
           </section>
+          {notice && <p className="msg ok" role="status">{notice}</p>}
 
-          <section className="card">
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr><th>Posisi</th><th>Ref</th><th>Alt</th><th>QUAL</th><th>DP</th><th>Efek SnpEff</th><th>Grantham</th><th>Risiko</th></tr>
-                </thead>
-                <tbody>
-                  {variants.map((v) => (
-                    <tr key={v.id}>
-                      <td>{v.position}</td><td>{v.ref_allele}</td><td>{v.alt_allele}</td>
-                      <td>{v.qual ?? '-'}</td><td>{v.dp ?? '-'}</td>
-                      <td>{v.snpeff_effect ?? '-'}</td><td>{v.grantham_score ?? '-'}</td><td>{v.risk_level ?? '-'}</td>
-                    </tr>
-                  ))}
-                  {!variants.length && <tr><td colSpan={8}>Belum ada varian. Pipeline analisis belum menghasilkan data.</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <ResultViewer data={data} fileName={runId} />
         </>
       )}
     </div>

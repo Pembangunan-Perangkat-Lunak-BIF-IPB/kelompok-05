@@ -3,7 +3,7 @@ import './pages.css'
 
 const stats = [
   ['Validasi lapis', '3 tingkat ketat'],
-  ['Stasiun kerja', '5 modul otomatis'],
+  ['Stasiun pipeline', '5 stasiun otomatis'],
   ['Panjang genom', '29.903 bp'],
   ['Database acuan', 'IEDB & GISAID'],
 ]
@@ -11,16 +11,16 @@ const stats = [
 const steps = [
   ['Siapkan berkas', 'FASTQ paired-end, FASTA genom acuan, tabel epitope IEDB. Pasangan forward (_R1) dan reverse (_R2) harus memiliki jumlah header identik.'],
   ['Unggah & validasi', 'Sistem memeriksa format (BR-07 s.d. 09), header FASTA single contig (BR-10 & 11), dan batas koordinat epitope (BR-12).'],
-  ['Jalankan & pantau', 'Pantau alignment, calling varian, dan anotasi secara realtime lewat log dan status 5 modul komputasi.'],
-  ['Analisis & unduh', 'Interpretasikan Immune Escape Score dan ekspor laporan PDF atau TSV.'],
+  ['Jalankan & pantau', 'Pantau alignment, calling varian, dan anotasi epitope secara realtime lewat log dan status 5 stasiun pipeline.'],
+  ['Analisis & unduh', 'Interpretasikan Immune Escape Risk Score (risk_level) per varian dan unduh hasil dalam CSV.'],
 ]
 
 const pipeline = [
-  ['Input FASTQ', 'Raw reads'],
-  ['QC & Align', 'BAM file'],
-  ['SNV Variant', 'VCF matrix'],
-  ['Pangolin', 'Lineage calling'],
-  ['Escape Model', 'Risk index'],
+  ['Quality Control', 'Kualitas read'],
+  ['Alignment', 'BAM file'],
+  ['Variant Calling', 'VCF matrix'],
+  ['Quality Filtering', 'Varian PASS'],
+  ['Epitope Mapping', 'Risk score'],
 ]
 
 const formats = [

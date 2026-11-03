@@ -21,12 +21,16 @@ kelompok-05/
 ├── frontend/
 │   ├── public/
 │   ├── src/
+│   │   ├── components/
+│   │   │   ├── ResultViewer.jsx
+│   │   │   └── result.css
 │   │   ├── layouts/
 │   │   │   ├── Layout.jsx
 │   │   │   ├── RequireAuth.jsx
 │   │   │   └── nav.js
 │   │   ├── lib/
 │   │   │   ├── api.js
+│   │   │   ├── risk.js
 │   │   │   └── validators.js
 │   │   ├── pages/
 │   │   │   ├── Login.jsx
@@ -36,6 +40,9 @@ kelompok-05/
 │   │   │   ├── Progress.jsx
 │   │   │   ├── Result.jsx
 │   │   │   ├── History.jsx
+│   │   │   ├── PublicFiles.jsx
+│   │   │   ├── PublicHistory.jsx
+│   │   │   ├── PublicResult.jsx
 │   │   │   ├── Placeholder.jsx
 │   │   │   ├── pages.css
 │   │   │   └── auth.css

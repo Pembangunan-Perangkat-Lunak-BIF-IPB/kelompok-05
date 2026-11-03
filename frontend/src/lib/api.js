@@ -30,10 +30,11 @@ export function logout() {
   lastRun.set(null)
 }
 
-async function request(path, { method = 'GET', json, body, fallback } = {}) {
+async function request(path, { method = 'GET', json, body, fallback, publicApi = false } = {}) {
   const headers = {}
   if (json !== undefined) headers['Content-Type'] = 'application/json'
-  if (auth.token) headers.Authorization = `Bearer ${auth.token}`
+  // Endpoint publik (Pembaca Publik) tidak memakai token
+  if (auth.token && !publicApi) headers.Authorization = `Bearer ${auth.token}`
 
   let res
   try {
@@ -49,7 +50,7 @@ async function request(path, { method = 'GET', json, body, fallback } = {}) {
   if (!res.ok) {
     const notAuth = res.status === 401 ||
       (res.status === 403 && /not authenticated/i.test(String(data?.detail)))
-    if (notAuth && !path.startsWith('/auth/')) {
+    if (notAuth && !publicApi && !path.startsWith('/auth/')) {
       logout()
       window.location.assign('/login')
       const err = new Error('Sesi berakhir. Silakan login kembali.')
@@ -103,3 +104,25 @@ export const getResults = (runId) => request(`/analysis/${encodeURIComponent(run
 
 export const setVisibility = (runId, visibility) =>
   request(`/analysis/${encodeURIComponent(runId)}/visibility`, { method: 'PATCH', json: { visibility } })
+
+// Pembaca Publik: tanpa token, hanya hasil berstatus PUBLIC
+export const getPublicAnalyses = () => request('/public/analyses', { publicApi: true })
+
+export const getPublicResults = (runId) =>
+  request(`/public/analyses/${encodeURIComponent(runId)}/results`, { publicApi: true })
+
+// Riwayat berkas publik yang pernah dibuka Pembaca (disimpan di peramban, tanpa akun)
+export const viewedFiles = {
+  list() {
+    try { return JSON.parse(localStorage.getItem('ve_viewed') ?? '[]') } catch { return [] }
+  },
+  add(item) {
+    try {
+      const rest = this.list().filter((x) => x.run_id !== item.run_id)
+      localStorage.setItem('ve_viewed', JSON.stringify([{ ...item, viewed_at: new Date().toISOString() }, ...rest].slice(0, 50)))
+    } catch { /* abaikan */ }
+  },
+  clear() {
+    try { localStorage.removeItem('ve_viewed') } catch { /* abaikan */ }
+  },
+}
