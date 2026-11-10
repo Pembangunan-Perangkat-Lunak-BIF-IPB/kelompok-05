@@ -16,6 +16,15 @@ export const auth = {
   },
 }
 
+export const session = {
+  get user() {
+    try { return JSON.parse(localStorage.getItem('ve_user') ?? 'null') } catch { return null }
+  },
+  set user(v) {
+    try { v ? localStorage.setItem('ve_user', JSON.stringify(v)) : localStorage.removeItem('ve_user') } catch { /* abaikan */ }
+  },
+}
+
 export const lastRun = {
   get() {
     try { return localStorage.getItem('ve_last_run') } catch { return null }
@@ -27,13 +36,15 @@ export const lastRun = {
 
 export function logout() {
   auth.token = null
+  session.user = null
   lastRun.set(null)
 }
 
-async function request(path, { method = 'GET', json, body, fallback } = {}) {
+async function request(path, { method = 'GET', json, body, fallback, publicApi = false } = {}) {
   const headers = {}
   if (json !== undefined) headers['Content-Type'] = 'application/json'
-  if (auth.token) headers.Authorization = `Bearer ${auth.token}`
+  // Endpoint publik (Pembaca Publik) tidak memakai token
+  if (auth.token && !publicApi) headers.Authorization = `Bearer ${auth.token}`
 
   let res
   try {
@@ -49,7 +60,7 @@ async function request(path, { method = 'GET', json, body, fallback } = {}) {
   if (!res.ok) {
     const notAuth = res.status === 401 ||
       (res.status === 403 && /not authenticated/i.test(String(data?.detail)))
-    if (notAuth && !path.startsWith('/auth/')) {
+    if (notAuth && !publicApi && !path.startsWith('/auth/')) {
       logout()
       window.location.assign('/login')
       const err = new Error('Sesi berakhir. Silakan login kembali.')
@@ -75,6 +86,7 @@ export async function login(email, password) {
     throw err
   }
   auth.token = data.access_token
+  session.user = data.user ?? null
   return data
 }
 
@@ -103,3 +115,49 @@ export const getResults = (runId) => request(`/analysis/${encodeURIComponent(run
 
 export const setVisibility = (runId, visibility) =>
   request(`/analysis/${encodeURIComponent(runId)}/visibility`, { method: 'PATCH', json: { visibility } })
+
+// Pembaca Publik: tanpa token, hanya hasil berstatus PUBLIC
+export const getPublicAnalyses = () => request('/public/analyses', { publicApi: true })
+
+export const getPublicResults = (runId) =>
+  request(`/public/analyses/${encodeURIComponent(runId)}/results`, { publicApi: true })
+
+// Riwayat berkas publik yang pernah dibuka Pembaca (disimpan di peramban, tanpa akun)
+export const viewedFiles = {
+  list() {
+    try { return JSON.parse(localStorage.getItem('ve_viewed') ?? '[]') } catch { return [] }
+  },
+  add(item) {
+    try {
+      const rest = this.list().filter((x) => x.run_id !== item.run_id)
+      localStorage.setItem('ve_viewed', JSON.stringify([{ ...item, viewed_at: new Date().toISOString() }, ...rest].slice(0, 50)))
+    } catch { /* abaikan */ }
+  },
+  clear() {
+    try { localStorage.removeItem('ve_viewed') } catch { /* abaikan */ }
+  },
+}
+
+// ---- Administrator ----------------------------------------------------------
+// TODO(backend): endpoint di bawah BELUM ada di kode referensi (frontend_m9).
+// Path dan bentuk respons adalah asumsi; sesuaikan dengan backend saat tersedia.
+
+// TODO: GET /admin/accounts -> daftar akun (status_aktif: PENDING_APPROVAL | ACTIVE | REJECTED | SUSPENDED)
+export const getAccounts = () => request('/admin/accounts')
+
+// TODO: PATCH /admin/accounts/{id}/status  body: { status_aktif }
+export const setAccountStatus = (id, status_aktif) =>
+  request(`/admin/accounts/${encodeURIComponent(id)}/status`, { method: 'PATCH', json: { status_aktif } })
+
+// TODO: POST /admin/accounts/{id}/reset-password
+export const resetAccountPassword = (id) =>
+  request(`/admin/accounts/${encodeURIComponent(id)}/reset-password`, { method: 'POST' })
+
+// TODO(backend): GET /admin/analyses -> semua analisis seluruh peneliti (PUBLIC & PRIVATE).
+// Field yang dipakai: run_id, sample_name, owner_name | owner_email, visibility, status, created_at
+export const getAdminAnalyses = () => request('/admin/analyses')
+
+// TODO: GET /admin/health -> telemetri node, Nextflow daemon, storage. Sementara memakai /health yang sudah ada.
+export const getAdminHealth = async () => {
+  try { return await request('/admin/health') } catch (e) { if (e.status === 404) return health(); throw e }
+}

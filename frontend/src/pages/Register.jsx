@@ -1,110 +1,96 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { register } from '../lib/api'
-import './pages.css'
-import './auth.css'
+import Icon from '../components/Icon'
+import { AuthShell, Brand, Field } from '../components/Auth'
 
-const EMPTY = {
-  full_name: '', email: '', institution: '', phone_number: '',
-  registration_reason: '', password: '', confirm: '',
+const EMPTY = { full_name: '', email: '', institution: '', password: '', confirm: '' }
+
+function strength(p) {
+  let s = 0
+  if (p.length >= 8) s++
+  if (/[A-Z]/.test(p) && /[a-z]/.test(p)) s++
+  if (/\d/.test(p)) s++
+  if (/[^A-Za-z0-9]/.test(p)) s++
+  return s
 }
+const LABEL = ['Belum diisi', 'Lemah', 'Cukup', 'Baik', 'Kuat']
 
 export default function Register() {
   const [form, setForm] = useState(EMPTY)
+  const [agree, setAgree] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(null)
   const [busy, setBusy] = useState(false)
-
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const score = strength(form.password)
 
   function validate() {
     if (!form.full_name.trim()) return 'Nama lengkap wajib diisi.'
     if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return 'Format email tidak valid.'
     if (form.password.length < 8) return 'Kata sandi minimal 8 karakter.'
     if (form.password !== form.confirm) return 'Konfirmasi kata sandi tidak sama.'
+    if (!agree) return 'Anda harus menyetujui kebijakan tata kelola data.'
     return ''
   }
 
   async function onSubmit(e) {
     e.preventDefault()
     const problem = validate()
-    if (problem) { setError(problem); return }
-    setBusy(true)
-    setError('')
+    if (problem) return setError(problem)
+    setBusy(true); setError('')
     try {
-      const data = await register({
-        email: form.email.trim(),
-        password: form.password,
-        full_name: form.full_name.trim(),
-        institution: form.institution.trim() || null,
-        phone_number: form.phone_number.trim() || null,
-        registration_reason: form.registration_reason.trim() || null,
-        role: 'RESEARCHER',
-      })
-      setDone(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setBusy(false)
-    }
+      setDone(await register({
+        email: form.email.trim(), password: form.password, full_name: form.full_name.trim(),
+        institution: form.institution.trim() || null, phone_number: null, registration_reason: null, role: 'RESEARCHER',
+      }))
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
   if (done) {
     const waiting = done.status_aktif === 'PENDING_APPROVAL'
     return (
-      <div className="auth-wrap">
-        <div className="auth-card">
-          <div className="brand-mark">VarEscape</div>
-          <h1>Registrasi berhasil</h1>
-          <p className={`msg ${waiting ? 'warn' : 'ok'}`} role="status">
-            {waiting
-              ? 'Akun Anda menunggu persetujuan admin. Anda dapat login setelah akun disetujui.'
-              : 'Akun Anda sudah dibuat. Silakan login.'}
+      <AuthShell>
+        <div className="auth-card xl">
+          <Brand title="Registrasi berhasil" sub="" />
+          <p className="auth-ok" role="status">
+            {waiting ? 'Akun Anda menunggu persetujuan administrator. Anda baru dapat masuk setelah diverifikasi.' : 'Akun Anda aktif. Silakan masuk.'}
           </p>
-          <Link className="btn btn-primary" to="/login">Ke halaman login</Link>
+          <Link className="auth-btn" to="/login">Ke halaman masuk</Link>
         </div>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="auth-wrap">
-      <form className="auth-card" onSubmit={onSubmit} noValidate>
-        <div className="brand-mark">VarEscape</div>
-        <h1>Daftar Akun Baru</h1>
-
-        <label htmlFor="full_name">Nama lengkap</label>
-        <input id="full_name" className="input" value={form.full_name} onChange={set('full_name')} />
-
-        <label htmlFor="email">Email</label>
-        <input id="email" type="email" className="input" autoComplete="username"
-          value={form.email} onChange={set('email')} />
-
-        <label htmlFor="institution">Institusi <span className="tag">Opsional</span></label>
-        <input id="institution" className="input" value={form.institution} onChange={set('institution')} />
-
-        <label htmlFor="phone_number">Nomor telepon <span className="tag">Opsional</span></label>
-        <input id="phone_number" className="input" value={form.phone_number} onChange={set('phone_number')} />
-
-        <label htmlFor="registration_reason">Alasan pendaftaran <span className="tag">Opsional</span></label>
-        <input id="registration_reason" className="input" value={form.registration_reason}
-          onChange={set('registration_reason')} />
-
-        <label htmlFor="password">Kata sandi</label>
-        <input id="password" type="password" className="input" autoComplete="new-password"
-          value={form.password} onChange={set('password')} />
-
-        <label htmlFor="confirm">Ulangi kata sandi</label>
-        <input id="confirm" type="password" className="input" autoComplete="new-password"
-          value={form.confirm} onChange={set('confirm')} />
-
-        {error && <p className="msg bad" role="alert">{error}</p>}
-
-        <button className="btn btn-primary" type="submit" disabled={busy}>
-          {busy ? 'Mendaftarkan…' : 'Daftar'}
-        </button>
-        <p className="auth-foot">Sudah punya akun? <Link to="/login">Login</Link></p>
+    <AuthShell>
+      <form className="auth-card xl" onSubmit={onSubmit}>
+        <Brand sub="Platform Analisis Genomik & Immune Escape Mapping" />
+        <div className="role-pills" style={{ justifyContent: 'center' }}><span className="role-pill active">Pendaftaran Peneliti</span></div>
+        <div className="tab-line"><span className="tab">Daftar di sini</span></div>
+        <div className="access-box">
+          <h3>Verifikasi Berjenjang</h3>
+          <ul><li><Icon name="info" size={14} />Akun baru berstatus menunggu persetujuan administrator sebelum dapat dipakai masuk.</li></ul>
+        </div>
+        {error && <p className="auth-err" role="alert">{error}</p>}
+        <Field label="Nama Lengkap" icon="user" value={form.full_name} onChange={set('full_name')} placeholder="Nama sesuai identitas akademik" autoComplete="name" required />
+        <Field label="Email Akademik / Lembaga" icon="mail" type="email" value={form.email} onChange={set('email')} placeholder="nama@apps.ipb.ac.id" hint="Gunakan email institusi agar verifikasi lebih cepat." autoComplete="email" required />
+        <Field label="Institusi" icon="building" value={form.institution} onChange={set('institution')} placeholder="Institut Pertanian Bogor" autoComplete="organization" />
+        <div className="cols2">
+          <Field label="Kata Sandi" icon="lock" type="password" value={form.password} onChange={set('password')} placeholder="Minimal 8 karakter" autoComplete="new-password" required />
+          <Field label="Konfirmasi Kata Sandi" icon="lock" type="password" value={form.confirm} onChange={set('confirm')} placeholder="Ulangi kata sandi" autoComplete="new-password" required />
+        </div>
+        <div style={{ margin: '-4px 0 14px' }}>
+          <div className="meter">{[1, 2, 3, 4].map((i) => <i key={i} className={score >= i ? 'on' : ''} />)}</div>
+          <div className="meter-row"><span>Kekuatan Kata Sandi: {LABEL[score]}</span><span>Minimal 8 karakter &amp; simbol</span></div>
+        </div>
+        <label className="check">
+          <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+          Saya menyetujui Kebijakan Tata Kelola Data Genomik Klinis dan Kode Etik Bioinformatika VarEscape.
+        </label>
+        <button className="auth-btn" disabled={busy}>{busy && <span className="spinner" />} Ajukan Pendaftaran Akun</button>
+        <p className="auth-alt">Sudah memiliki akun terverifikasi? <Link to="/login">Masuk di sini</Link></p>
       </form>
-    </div>
+    </AuthShell>
   )
 }
