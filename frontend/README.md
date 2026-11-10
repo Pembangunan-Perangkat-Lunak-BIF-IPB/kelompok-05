@@ -1,38 +1,177 @@
-# VarEscape Frontend
+# VarEscape
 
-React 19 + Vite + react-router-dom v7, CSS biasa (tanpa Tailwind). Struktur sama dengan `frontend_m9`.
+Aplikasi web yang menggabungkan *variant calling* dan *immune escape analysis* dalam satu antarmuka, dilengkapi auto-diagnostics per tahap, export konfigurasi ke YAML, dan penyimpanan data di PostgreSQL.
 
-```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build
+Proyek mata kuliah Pembangunan Perangkat Lunak — Kelompok 5, Bioinformatika IPB University.
+
+## Anggota
+
+| Nama | Peran |
+| --- | --- |
+| Candra | Project Manager |
+| Talitha | System Analyst |
+| Raihan | Frontend |
+| Afifah | Backend |
+| Guruh | Tester |
+
+## Struktur Folder
+
+```
+kelompok-05/
+├── frontend/
+│   ├── public/
+│   │   └── favicon.png
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── logo.png
+│   │   ├── components/
+│   │   │   ├── Auth.jsx
+│   │   │   ├── Icon.jsx
+│   │   │   ├── ResultViewer.jsx
+│   │   │   └── result.css
+│   │   ├── layouts/
+│   │   │   ├── Layout.jsx
+│   │   │   ├── RequireAuth.jsx
+│   │   │   └── nav.js
+│   │   ├── lib/
+│   │   │   ├── api.js
+│   │   │   ├── pileup.js
+│   │   │   ├── risk.js
+│   │   │   └── validators.js
+│   │   ├── pages/
+│   │   │   ├── admin/
+│   │   │   │   ├── Accounts.jsx
+│   │   │   │   ├── AdminHistory.jsx
+│   │   │   │   └── HealthCheck.jsx
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── Guide.jsx
+│   │   │   ├── NewAnalysis.jsx
+│   │   │   ├── Progress.jsx
+│   │   │   ├── Result.jsx
+│   │   │   ├── History.jsx
+│   │   │   ├── PublicFiles.jsx
+│   │   │   ├── PublicHistory.jsx
+│   │   │   ├── PublicResult.jsx
+│   │   │   ├── Placeholder.jsx
+│   │   │   ├── landing.css
+│   │   │   ├── history.css
+│   │   │   ├── pages.css
+│   │   │   └── auth.css
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   └── README.md
+├── backend/
+│   ├── data/references/
+│   ├── docs/api.md
+│   ├── routers/
+│   ├── schemas/
+│   ├── utils/
+│   ├── database.py
+│   ├── main.py
+│   ├── models.py
+│   ├── security.py
+│   └── requirements.txt
+└── docs/
+    └── pengujian/
 ```
 
-API: `VITE_API_URL` (default `http://localhost:8000/api/v1`), semua lewat `src/lib/api.js`.
-Font Public Sans dimuat dari Google Fonts (`index.html`).
+## Prasyarat
 
-## Rute
-| Rute | Layar |
-|---|---|
-| `/` | Landing (hero + animasi read pileup) |
-| `/login`, `/register` | Masuk / Daftar Peneliti |
-| `/public/login` | Masuk Pembaca (guest) |
-| `/admin/login` | Masuk Administrator |
-| `/guide`, `/analysis/new`, `/analysis/:id/progress`, `/analysis/:id/result`, `/history` | Peneliti |
-| `/public`, `/public/history`, `/public/:id/result` | Pembaca |
-| `/admin/accounts`, `/admin/health` | Administrator |
+Install dulu sebelum menjalankan aplikasi:
 
-## TODO backend (belum ada di kode referensi)
-- `GET /admin/accounts`, `PATCH /admin/accounts/{id}/status`, `POST .../reset-password` (Kelola Akun)
-- `GET /admin/health` (fallback ke `/health`); nama field telemetri adalah asumsi (Health Check)
-- Unduh ZIP laporan, unduh VCF, batalkan analisis, restart daemon, berkas contoh: tombol dinonaktifkan
-- Respons login sebaiknya membawa `user.role` (dipakai validasi login Administrator)
+- Git
+- Node.js versi 20.19 atau lebih baru (dikembangkan dengan v24.21.0)
+- Python versi 3.10 atau lebih baru
+- PostgreSQL versi 14 atau lebih baru
+- DBeaver (atau PostgreSQL GUI Client yang lain)
 
-## Pengganti aset
-Ikon kecil = SVG Lucide inline (`src/components/Icon.jsx`), bukan ikon asli Figma.
-Ikon KPI/langkah di Panduan diganti singkatan teks/ikon Lucide.
-Logo = `Logo_BIFIVE.png` (src/assets/logo.png).
+Pengguna Windows disarankan memakai Command Prompt (CMD).
 
-## Landing
-Animasi: `src/lib/pileup.js` (mesin murni) + `src/pages/Landing.jsx` (Canvas 2D + rAF, hormati `prefers-reduced-motion`).
-Data mutasi (N501Y, dst.) hanya contoh, bukan hasil analisis.
+## Cara Menjalankan
+
+### 1. Ambil kode
+
+```bash
+git clone https://github.com/Pembangunan-Perangkat-Lunak-BIF-IPB/kelompok-05.git
+cd kelompok-05
+```
+
+### 2. Siapkan basis data
+
+Pastikan layanan PostgreSQL sudah aktif di perangkat yang digunakan, lalu buat basis data baru lewat DBeaver, pgAdmin, atau terminal SQL:
+
+```sql
+CREATE DATABASE varescape_db;
+```
+
+Selanjutnya, buat file bernama `.env` di dalam folder `backend/` dan atur URL koneksi basis data yang sudah dibuat:
+
+```
+DATABASE_URL=postgresql+psycopg://postgres:password_anda@localhost:5432/varescape_db
+```
+
+### 3. Jalankan backend
+
+```bash
+# Masuk ke folder backend
+cd backend
+
+# (Opsional) Buat dan aktifkan virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+# Perintah install dependency
+pip install fastapi uvicorn sqlalchemy "psycopg[binary]" python-dotenv
+
+# Perintah menjalankan server (tabel basis data otomatis terbuat saat server startup)
+uvicorn main:app --reload --port 8000
+```
+
+Cek berhasil: buka `http://localhost:8000/api/v1/health` → harus muncul status `healthy` dan database `connected`.
+### Endpoint API 
+
+- **Autentikasi:**
+  - `POST /api/v1/auth/register` — Registrasi akun pengguna baru
+  - `POST /api/v1/auth/login` — Autentikasi & penerbitan Token JWT
+- **Workbench Analysis:**
+  - `POST /api/v1/analysis/upload` — Unggah berkas sampel (FASTQ, FASTA, IEDB)
+  - `GET /api/v1/analysis/{run_id}/status` — Cek status pemrosesan analisis
+  - `GET /api/v1/analysis/{run_id}/results` — Penarikan hasil analisis varian
+  - `PATCH /api/v1/analysis/{run_id}/visibility` — Pembaruan visibilitas (`PUBLIC`/`PRIVATE`)
+
+📄 **Dokumentasi Lengkap:** Detail spesifikasi REST API dapat dilihat pada berkas [`docs/api.md`](docs/api.md).
+
+### 4. Jalankan frontend
+
+```bash
+# Jalankan perintah berikut pada Terminal Command Prompt
+# Pindah direktori ke folder kelompok-05 yang berisi semua file yang dibutuhkan
+cd frontend
+npm install
+npm run dev
+```
+
+Cek berhasil: buka `http://localhost:3000` pada browser → otomatis menuju halaman Login
+Peneliti (placeholder). Halaman dengan sidebar dapat dibuka lewat `/guide`,
+`/analysis/new`, `/history`, `/public`, dan `/admin/accounts`.
+
+## Kendala Umum
+
+| Masalah | Solusi |
+| --- | --- |
+| Skrip diblokir PowerShell (aktivasi `venv` atau `npm -v` gagal karena kebijakan eksekusi) | Gunakan Command Prompt (CMD), atau di PowerShell jalankan `npm.cmd` sebagai pengganti `npm` |
+| `ImportError: no pq wrapper available` saat menjalankan backend | Jalankan `pip install "psycopg[binary]"` |
+| `database "varescape_db" does not exist` saat server dinyalakan | Buat basis data dulu dengan `CREATE DATABASE varescape_db;` (langkah 2) |
+
+## Tautan
+
+- Repository: https://github.com/Pembangunan-Perangkat-Lunak-BIF-IPB/kelompok-05
+- GitHub Project: https://github.com/orgs/Pembangunan-Perangkat-Lunak-BIF-IPB/projects/16
+- Prototype Figma: https://www.figma.com/proto/MYJ4HR4Lh39ukfgmDuwA5Z/Update-W6-High-Fidelity-VarEscape-BIFIVE---FIX?page-id=0%3A1&node-id=4007-284&p=f&viewport=410%2C229%2C0.05&t=nt7iCAxbEMk6XiCp-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=4007%3A284&show-proto-sidebar=1
