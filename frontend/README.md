@@ -20,29 +20,64 @@ Proyek mata kuliah Pembangunan Perangkat Lunak — Kelompok 5, Bioinformatika IP
 kelompok-05/
 ├── frontend/
 │   ├── public/
+│   │   └── favicon.png
 │   ├── src/
+│   │   ├── assets/
+│   │   │   └── logo.png
+│   │   ├── components/
+│   │   │   ├── Auth.jsx
+│   │   │   ├── Icon.jsx
+│   │   │   ├── ResultViewer.jsx
+│   │   │   └── result.css
 │   │   ├── layouts/
 │   │   │   ├── Layout.jsx
+│   │   │   ├── RequireAuth.jsx
 │   │   │   └── nav.js
 │   │   ├── lib/
 │   │   │   ├── api.js
+│   │   │   ├── pileup.js
+│   │   │   ├── risk.js
 │   │   │   └── validators.js
 │   │   ├── pages/
-│   │   │   ├── Placeholder.jsx
+│   │   │   ├── admin/
+│   │   │   │   ├── Accounts.jsx
+│   │   │   │   ├── AdminHistory.jsx
+│   │   │   │   └── HealthCheck.jsx
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
 │   │   │   ├── Guide.jsx
 │   │   │   ├── NewAnalysis.jsx
-│   │   │   └── pages.css
+│   │   │   ├── Progress.jsx
+│   │   │   ├── Result.jsx
+│   │   │   ├── History.jsx
+│   │   │   ├── PublicFiles.jsx
+│   │   │   ├── PublicHistory.jsx
+│   │   │   ├── PublicResult.jsx
+│   │   │   ├── Placeholder.jsx
+│   │   │   ├── landing.css
+│   │   │   ├── history.css
+│   │   │   ├── pages.css
+│   │   │   └── auth.css
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
 │   ├── index.html
 │   ├── package.json
-│   └── vite.config.js
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   └── README.md
 ├── backend/
-│   ├── .gitignore
+│   ├── data/references/
+│   ├── docs/api.md
+│   ├── routers/
+│   ├── schemas/
+│   ├── utils/
 │   ├── database.py
 │   ├── main.py
-│   └── models.py
+│   ├── models.py
+│   ├── security.py
+│   └── requirements.txt
 └── docs/
     └── pengujian/
 ```

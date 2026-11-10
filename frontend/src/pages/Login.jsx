@@ -1,61 +1,94 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { auth, login } from '../lib/api'
-import './pages.css'
-import './auth.css'
+import { auth, errorMessage, login } from '../lib/api'
+import Icon from '../components/Icon'
+import { AuthShell, Brand, Field, RolePills } from '../components/Auth'
 
-export default function Login() {
+const SUB = 'Platform Analisis Genomik & Immune Escape Mapping'
+
+// Satu komponen untuk tiga layar masuk: Peneliti, Pembaca (guest), Administrator
+export default function Login({ role = 'researcher' }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [pending, setPending] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  if (auth.token) return <Navigate to="/guide" replace />
+  if (role === 'researcher' && auth.token) return <Navigate to="/guide" replace />
 
   async function onSubmit(e) {
     e.preventDefault()
-    setError('')
-    setPending(false)
-    if (!email.trim() || !password) {
-      setError('Email dan kata sandi wajib diisi.')
-      return
-    }
     setBusy(true)
+    setError('')
     try {
-      await login(email.trim(), password)
-      navigate(location.state?.from ?? '/guide', { replace: true })
+      const data = await login(email.trim(), password)
+      // TODO(backend): pastikan respons login membawa peran pengguna (user.role).
+      const r = String(data?.user?.role ?? '').toUpperCase()
+      if (role === 'admin' && r && r !== 'ADMIN' && r !== 'ADMINISTRATOR') {
+        throw new Error('Akun ini bukan Administrator.')
+      }
+      navigate(role === 'admin' ? '/admin/accounts' : (location.state?.from ?? '/guide'), { replace: true })
     } catch (err) {
-      setPending(err.code === 'PENDING_APPROVAL')
-      setError(err.message)
+      setError(err.message || errorMessage(null))
+      if (role === 'admin') auth.token = null
+    } finally {
       setBusy(false)
     }
   }
 
+  if (role === 'reader') {
+    return (
+      <AuthShell>
+        <div className="auth-card">
+          <Brand sub={SUB} />
+          <RolePills active="reader" />
+          <div className="tab-line"><span className="tab">Akses Publik</span></div>
+          <div className="access-box">
+            <h3>Modus Akses Publik (Read-Only)</h3>
+            <ul>
+              {['Lihat berkas hasil analisis yang dipublikasikan peneliti', 'Tanpa akun dan tanpa kata sandi', 'Tidak dapat mengunggah atau mengubah data'].map((t) => (
+                <li key={t}><Icon name="check-circle" size={14} />{t}</li>
+              ))}
+            </ul>
+          </div>
+          <Link to="/public" className="auth-btn"><Icon name="globe" size={14} /> Masuk sebagai Pembaca Publik</Link>
+          <p className="auth-alt">Peneliti? <Link to="/login">Masuk dengan akun</Link></p>
+          <p className="auth-meta">VarEscape v1.0.0 • Bioinformatika</p>
+        </div>
+      </AuthShell>
+    )
+  }
+
+  const admin = role === 'admin'
   return (
-    <div className="auth-wrap">
-      <form className="auth-card" onSubmit={onSubmit} noValidate>
-        <div className="brand-mark">VarEscape</div>
-        <h1>Login Peneliti</h1>
-        <p className="muted">Masuk untuk mengunggah berkas dan menjalankan analisis.</p>
-
-        <label htmlFor="email">Email</label>
-        <input id="email" type="email" className="input" autoComplete="username"
-          value={email} onChange={(e) => setEmail(e.target.value)} placeholder="peneliti@ipb.ac.id" />
-
-        <label htmlFor="password">Kata sandi</label>
-        <input id="password" type="password" className="input" autoComplete="current-password"
-          value={password} onChange={(e) => setPassword(e.target.value)} />
-
-        {error && <p className={`msg ${pending ? 'warn' : 'bad'}`} role="alert">{error}</p>}
-
-        <button className="btn btn-primary" type="submit" disabled={busy}>
-          {busy ? 'Memeriksa…' : 'Masuk'}
+    <AuthShell>
+      <form className={`auth-card ${admin ? 'wide' : ''}`} onSubmit={onSubmit}>
+        <Brand title="VarEscape" sub={admin ? 'Konsol Administrator • Manajemen Akun & Pemantauan Server' : SUB} />
+        {!admin && <RolePills active="researcher" />}
+        {!admin && <div className="tab-line"><span className="tab">Masuk Akun</span></div>}
+        {admin && (
+          <div className="access-box">
+            <h3>Hak Akses Superuser (Root Admin)</h3>
+            <ul>
+              {['Verifikasi dan kelola akun peneliti', 'Pantau kesehatan server dan pipeline', 'Semua aktivitas dicatat dalam audit log'].map((t) => (
+                <li key={t}><Icon name="shield-check" size={14} />{t}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {error && <p className="auth-err" role="alert">{error}</p>}
+        <Field label={admin ? 'Email Administrator / Root ID' : 'Email Akademik / Lembaga'} icon="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={admin ? 'admin@varescape.id' : 'peneliti@apps.ipb.ac.id'} autoComplete="username" required />
+        <Field
+          label={admin ? 'Kunci Enkripsi / Token Akses Lab' : 'Kata Sandi'} icon="lock" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" autoComplete="current-password" required
+        />
+        <button className="auth-btn" disabled={busy}>
+          {busy ? <span className="spinner" /> : <Icon name="log-in" size={14} />}
+          {admin ? 'Masuk ke Dashboard Administrator' : 'Masuk ke Dashboard Peneliti'}
         </button>
-        <p className="auth-foot">Belum punya akun? <Link to="/register">Daftar</Link></p>
+        {!admin && <p className="auth-alt">Belum memiliki akun? <Link to="/register">Daftar di sini</Link></p>}
+        <p className="auth-meta">VarEscape v1.0.0 • Bioinformatika</p>
       </form>
-    </div>
+    </AuthShell>
   )
 }
