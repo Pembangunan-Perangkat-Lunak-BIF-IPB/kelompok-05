@@ -1,0 +1,113 @@
+.landing {
+  --lp-bg: #07121a;
+  --lp-cyan: #22d3ee;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--lp-bg);
+  color: #fff;
+  font-family: 'Public Sans', system-ui, sans-serif;
+  overflow: hidden;
+}
+.lp-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.lp-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 45% at 50% 0%, rgba(20, 184, 166, 0.2), transparent 70%);
+}
+
+/* Top bar */
+.lp-top {
+  position: sticky; top: 0; z-index: 20;
+  height: 64px; padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(7, 18, 26, 0.7);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(8, 51, 68, 0.4);
+}
+.lp-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+.lp-brand img { border-radius: 8px; display: block; }
+.lp-about {
+  font: inherit; font-size: 14px; font-weight: 600; color: #cbd5e1; cursor: pointer;
+  background: transparent; border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 10px; padding: 8px 16px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.lp-about:hover { color: #fff; border-color: rgba(34, 211, 238, 0.6); background: rgba(34, 211, 238, 0.08); }
+.lp-about:focus-visible, .lp-cta:focus-visible { outline: 2px solid var(--lp-cyan); outline-offset: 3px; }
+
+/* Konten */
+.lp-main {
+  position: relative; z-index: 5; flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 40px;
+  padding: 32px 24px 284px; /* ruang untuk animasi 260px */
+}
+.lp-title {
+  margin: 0; max-width: 1100px;
+  font-size: clamp(34px, 5vw, 68px); line-height: 1.1; font-weight: 800; letter-spacing: -0.025em;
+  background: linear-gradient(100deg, #fff 20%, var(--lp-cyan) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+.lp-title span { display: block; }
+@media (max-width: 767px) { .lp-title span { display: inline; } }
+
+.lp-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 32px; border-radius: 12px; text-decoration: none;
+  font-weight: 700; font-size: 16px; color: #fff;
+  background: linear-gradient(135deg, #14b8a6, #0e6e6e);
+  box-shadow: 0 10px 30px -8px rgba(20, 184, 166, 0.55);
+  transition: transform .15s, box-shadow .15s;
+}
+.lp-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 34px -8px rgba(20, 184, 166, 0.7); }
+
+.lp-inputs { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.lp-inputs-label { color: #64748b; font-weight: 500; margin-right: 4px; }
+.lp-chip {
+  padding: 5px 12px; border-radius: 999px; font-weight: 600; color: #a5f3fc;
+  background: rgba(8, 51, 68, 0.45); border: 1px solid rgba(34, 211, 238, 0.18);
+}
+
+/* Animasi read pileup */
+.lp-pileup {
+  position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 260px; z-index: 1;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 24%);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 24%);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+
+/* Popup Hubungi Kami */
+.lp-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: rgba(3, 9, 14, 0.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.lp-modal {
+  position: relative; width: 100%; max-width: 400px; background: #fff; color: #0f1f2c;
+  border-radius: 16px; padding: 28px 28px 24px; box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.5);
+}
+.lp-modal h2 { margin: 0 0 18px; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.lp-modal-x {
+  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center;
+  border: 0; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer;
+}
+.lp-modal-x:hover { background: #f1f5f9; color: #0f1f2c; }
+.lp-contact-row {
+  display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 14px;
+  background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; color: #0e6e6e;
+}
+.lp-contact-row a { flex: 1; color: #0f1f2c; font-weight: 600; text-decoration: none; word-break: break-all; }
+.lp-contact-row a:hover { text-decoration: underline; color: #0e6e6e; }
+.lp-copy {
+  display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 600;
+  padding: 7px 12px; border-radius: 8px; border: 0; cursor: pointer; color: #fff; background: #0f1f2c;
+}
+.lp-copy:hover { background: #0e6e6e; }
+.lp-modal-x:focus-visible, .lp-copy:focus-visible { outline: 2px solid #0e6e6e; outline-offset: 2px; }
