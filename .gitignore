@@ -1,0 +1,41 @@
+
+# ===== VarEscape M11 =====
+
+# Environment dan secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Frontend
+node_modules/
+dist/
+.vite/
+
+# Data hasil analisis
+uploads/
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.bam
+*.bai
+
+# File sementara
+.DS_Store
+Thumbs.db
+
+
+# Indeks referensi bioinformatika (dapat dibuat ulang)
+*.fasta.0123
+*.fasta.amb
+*.fasta.ann
+*.fasta.bwt.2bit.64
+*.fasta.fai
+*.fasta.pac
