@@ -41,6 +41,7 @@ function PileupCanvas() {
     }
 
     const resize = () => {
+      // Ambil devicePixelRatio untuk memastikan ketajaman di berbagai zoom level
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       w = canvas.clientWidth
       h = canvas.clientHeight
@@ -52,11 +53,13 @@ function PileupCanvas() {
 
     const ro = new ResizeObserver(resize)
     ro.observe(canvas)
+    window.addEventListener('resize', resize)
     mq.addEventListener('change', run)
     resize()
     return () => {
       cancelAnimationFrame(raf)
       ro.disconnect()
+      window.removeEventListener('resize', resize)
       mq.removeEventListener('change', run)
     }
   }, [])

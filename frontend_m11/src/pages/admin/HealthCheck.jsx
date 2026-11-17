@@ -32,7 +32,7 @@ export default function HealthCheck() {
   return (
     <>
       <div className="hh"><div><h1 style={{ fontSize: 22 }}>Pemantauan Server &amp; Diagnostik Komputasi</h1><p>Status kesehatan node HPC (High Performance Computing), alokasi sumber daya, dan antrean daemon bioinformatika secara real-time.</p></div>
-        <button className="btn-ok" onClick={load} disabled={busy} style={{ background: 'var(--teal-d)', borderRadius: 2 }}>{busy ? <span className="spinner" /> : <Icon name="refresh" size={11} />} Perbarui Sekarang</button></div>
+        <button className="btn-ok" onClick={load} disabled={busy} style={{ background: 'var(--teal-d)' }}>{busy ? <span className="spinner" /> : <Icon name="refresh" size={11} />} Perbarui Sekarang</button></div>
       {error && <p className="alert error" role="alert" style={{ marginTop: 16 }}>{error}</p>}
       {d && status && <p className={`alert ${String(status).toLowerCase() === 'ok' ? 'ok' : 'error'}`} style={{ marginTop: 16 }}>Status layanan API: <b>{String(status)}</b></p>}
 
@@ -43,7 +43,7 @@ export default function HealthCheck() {
         <div className="hc"><small>Antrean Tugas (Job Queue)</small><div className="n">{queue.length} <span className="tg g">HEALTHY PIPE</span></div><div className="f"><b>{queue.filter((j) => /RUN/i.test(j.status)).length} berjalan, {queue.filter((j) => !/RUN/i.test(j.status)).length} menunggu</b></div></div>
       </div>
 
-      <section className="sec" style={{ border: '1px solid #e2e8f0', borderRadius: 4 }}>
+      <section className="sec">
         <div className="sec-h"><div><h2 style={{ fontSize: 18 }}><Icon name="server" size={13} /> Antrean Tugas Bioinformatika</h2><p>Daftar eksekusi analisis genomic pipeline yang sedang berjalan dan antrean prioritas komputasi saat ini.</p></div><small className="muted">Slot Terpakai: {queue.filter((j) => /RUN/i.test(j.status)).length}</small></div>
         <div className="q-row th"><span>PEMILIK</span><span>PIPELINE STAGE</span><span>ALOKASI CPU / RAM</span><span>WAKTU BERJALAN</span><span>STATUS</span></div>
         {!queue.length && <div className="empty">Tidak ada tugas dalam antrean (atau backend belum mengirim data antrean).</div>}

@@ -1,12 +1,9 @@
-
 /*
  * VarEscape — UI Polishing
- * Finishing touch tanpa mengubah struktur React.
- * Warna utama, layout, routing, dan fungsi tetap.
+ * Finishing touch tanpa mengubah struktur atau logika React.
  */
 
-/* Font modern */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 :root {
   font-family: 'Inter', 'Public Sans', system-ui, sans-serif;
@@ -26,7 +23,8 @@ h1, h2, h3, h4,
 .page-title,
 .card-title {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  letter-spacing: -0.025em;
+  color: var(--ink);
+  letter-spacing: -0.02em;
   line-height: 1.35;
 }
 
@@ -35,7 +33,7 @@ h1, .page-title {
 }
 
 h2, h3, .card-title {
-  font-weight: 650;
+  font-weight: 700;
 }
 
 p {
@@ -44,6 +42,10 @@ p {
 
 /* Angka statistik lebih stabil */
 .mono,
+code,
+.log-line,
+.flank,
+.eff-params,
 table,
 .tbl,
 .quality-value,
@@ -51,57 +53,35 @@ table,
   font-variant-numeric: tabular-nums;
 }
 
-/* Sidebar — efek lebih halus */
+.mono,
+code,
+.log-line,
+.flank,
+.eff-params {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+
+/* Sidebar */
 .sb-brand {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  letter-spacing: -0.025em;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  letter-spacing: -0.02em;
 }
 
-.sb-link {
-  transition:
-    background-color 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.sb-link:hover {
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.sb-link.active {
-  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.65);
-}
-
-/* Card — tetap bentuk asli, lebih lembut */
+/* Card */
 .card {
-  box-shadow:
-    0 2px 8px rgba(15, 31, 44, 0.035),
-    0 1px 2px rgba(15, 31, 44, 0.025);
-
+  box-shadow: var(--shadow-sm);
   transition:
-    box-shadow 180ms ease,
-    border-color 180ms ease;
+    box-shadow 200ms ease,
+    border-color 200ms ease;
 }
 
 .card:hover {
-  box-shadow:
-    0 5px 16px rgba(15, 31, 44, 0.055),
-    0 1px 3px rgba(15, 31, 44, 0.025);
+  box-shadow: var(--shadow-md);
 }
 
 /* Tombol */
 .btn {
   font-weight: 600;
-
-  transition:
-    background-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease,
-    border-color 180ms ease;
-}
-
-.btn:hover:not(:disabled) {
-  transform: translateY(-1px);
 }
 
 .btn:active:not(:disabled) {
@@ -109,11 +89,11 @@ table,
 }
 
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(14, 110, 110, 0.18);
+  box-shadow: 0 10px 24px -4px rgba(168, 85, 247, 0.35);
 }
 
 .btn-dark:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(15, 31, 44, 0.16);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.22);
 }
 
 /* Input, select, textarea */
@@ -129,14 +109,14 @@ textarea {
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid rgba(14, 110, 110, 0.30);
+  outline: 2px solid rgba(56, 189, 248, 0.45);
   outline-offset: 1px;
 }
 
 /* Tabel */
 .tbl th {
   font-weight: 700;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.05em;
 }
 
 .tbl td {
@@ -148,19 +128,19 @@ textarea:focus-visible {
 }
 
 .tbl tbody tr:hover td {
-  background: #f1f8f7;
+  background: #F8FAFF;
 }
 
 /* Status dan badge */
 .pill,
 .role-badge {
-  font-weight: 600;
-  letter-spacing: 0.005em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 /* Topbar */
 .topbar {
-  box-shadow: 0 1px 5px rgba(15, 31, 44, 0.025);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
 }
 
 .user b {
@@ -172,9 +152,6 @@ textarea:focus-visible {
   line-height: 1.6;
 }
 
-/* Aksesibilitas:
-   jangan memaksakan animasi saat pengguna
-   memilih reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .sb-link,
   .card,

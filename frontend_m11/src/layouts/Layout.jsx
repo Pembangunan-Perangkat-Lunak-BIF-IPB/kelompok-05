@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { lastRun, logout, session, viewedFiles } from '../lib/api'
 import logo from '../assets/logo.png'
+import Icon from '../components/Icon'
 import { NAV, ROLE_LABEL } from './nav'
 
 // variant: 'researcher' | 'reader' | 'admin'
@@ -32,7 +33,10 @@ export default function Layout({ variant = 'researcher' }) {
         <div className="sb-brand"><img src={logo} alt="" />VarEscape</div>
         <nav className="sb-nav">
           {items.map((l) => (
-            <NavLink key={l.label} to={l.to} end={l.end} className={({ isActive }) => `sb-link${(l.active ?? isActive) ? ' active' : ''}`}>{l.label}</NavLink>
+            <NavLink key={l.label} to={l.to} end={l.end} className={({ isActive }) => `sb-link${(l.active ?? isActive) ? ' active' : ''}`}>
+              <Icon name={l.icon} size={17} />
+              <span>{l.label}</span>
+            </NavLink>
           ))}
         </nav>
         <div className="sb-foot">
