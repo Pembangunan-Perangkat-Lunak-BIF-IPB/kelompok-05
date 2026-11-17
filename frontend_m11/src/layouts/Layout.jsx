@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { lastRun, logout, session, viewedFiles } from '../lib/api'
+import { lastRun, logout, session } from '../lib/api'
 import logo from '../assets/logo.png'
 import { NAV, ROLE_LABEL } from './nav'
 
@@ -15,7 +15,14 @@ export default function Layout({ variant = 'researcher' }) {
   const items = NAV[variant].map((l) => {
     if (l.to === '/progress') return { ...l, to: last ? `/analysis/${last}/progress` : '/history', active: openRun?.[2] === 'progress' }
     if (l.to === '/result') return { ...l, to: last ? `/analysis/${last}/result` : '/history', active: openRun?.[2] === 'result' }
-    if (l.to === '/public/result') { const v = viewedFiles.list()[0]; return { ...l, to: v ? `/public/${v.run_id}/result` : '/public', active: /^\/public\/[^/]+\/result/.test(pathname) } }
+    if (l.to === '/public/results') {
+      return {
+        ...l,
+        active:
+          pathname === '/public/results' ||
+          /^\/public\/[^/]+\/result$/.test(pathname),
+      }
+    }
     return l
   })
   const name = user?.full_name ?? user?.name ?? user?.email ?? null

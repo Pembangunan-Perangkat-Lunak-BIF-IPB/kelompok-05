@@ -108,6 +108,7 @@ export default function NewAnalysis() {
     sampleName,
     files,
     checks,
+    headerCheck,
     mode,
     vals,
     phase,
@@ -124,11 +125,15 @@ export default function NewAnalysis() {
   const validating = phase === 'validating'
   const locked = busy || Boolean(result)
 
+  const checkingHeaders = phase === 'checking_headers'
+
   const ready =
     Boolean(files.r1 && files.r2) &&
     checks.r1?.ok === true &&
     checks.r2?.ok === true &&
+    headerCheck?.ok === true &&
     !validating &&
+    !checkingHeaders &&
     !paramsInvalid
 
   useEffect(() => {
@@ -153,13 +158,12 @@ export default function NewAnalysis() {
     }
   }
 
-  const summaryList = result?.uploaded_files_summary ?? []
-  const summary = (type) =>
-    summaryList.find((item) => item.file_type === type)
 
   const stateLabel =
     phase === 'validating'
       ? 'MEMERIKSA'
+      : phase === 'checking_headers'
+      ? 'VALIDASI HEADER'
       : phase === 'uploading'
         ? 'MENGUNGGAH'
         : phase === 'starting'
@@ -278,9 +282,9 @@ export default function NewAnalysis() {
             </h2>
 
             <p>
-              Pemeriksaan ekstensi, ukuran, dan signature gzip.
-              Integritas isi serta pasangan reads akan
-              divalidasi backend saat analisis dikirim.
+              Lapis 1 memeriksa format berkas.
+              Lapis 2 memeriksa struktur header FASTQ
+              dan kesesuaian pasangan R1/R2 saat upload final.
             </p>
           </div>
 
@@ -303,14 +307,14 @@ export default function NewAnalysis() {
           <span>BERKAS</span>
           <span>UKURAN</span>
           <span>1. FORMAT</span>
-          <span>2. INTEGRITAS</span>
+          <span>2. HEADER</span>
           <span>STATUS</span>
         </div>
 
         {ROWS.map(([key, type]) => {
           const file = files[key]
           const check = checks[key]
-          const server = summary(type)
+        
 
           return (
             <div className="v-row" key={key}>
@@ -333,27 +337,43 @@ export default function NewAnalysis() {
                   : validating && file ? 'Memeriksa...' : '-'}
               </span>
 
+              
               <span
                 className={
-                  server?.validation_status === 'PASS'
+                  headerCheck?.ok === true
                     ? 'ok'
-                    : 'mu'
+                    : headerCheck?.ok === false
+                      ? 'bad'
+                      : 'mu'
                 }
               >
-                {server
-                  ? server.validation_status === 'PASS'
-                    ? '✓ Lolos'
-                    : '✕ Gagal'
-                  : 'Saat dikirim'}
+                {headerCheck?.ok === true
+                  ? '✓ PASS'
+                  : headerCheck?.ok === false
+                    ? '✕ Gagal'
+                    : checkingHeaders
+                      ? 'Memeriksa...'
+                      : '-'}
               </span>
 
-              <span className={check?.ok ? 'ok' : 'mu'}>
-                {server?.validation_status === 'PASS'
-                  ? '● Valid server'
-                  : check?.ok
-                    ? '● Lolos pemeriksaan'
-                    : '-'}
+              <span
+                className={
+                  headerCheck?.ok === true
+                    ? 'ok'
+                    : headerCheck?.ok === false || check?.ok === false
+                      ? 'bad'
+                      : 'mu'
+                }
+              >
+                {headerCheck?.ok === true
+                  ? '● PASS'
+                  : headerCheck?.ok === false || check?.ok === false
+                    ? '● GAGAL'
+                    : checkingHeaders
+                      ? '● Memvalidasi'
+                      : '-'}
               </span>
+
             </div>
           )
         })}
@@ -400,10 +420,10 @@ export default function NewAnalysis() {
         <div className="layer">
           <Icon name="shield-check" size={12} />
           <div>
-            <b>Lapis 2: Validasi Integritas</b>
+            <b>Lapis 2: Validasi Header</b>
             <span>
-              Pemeriksaan struktur FASTQ dan pasangan reads
-              dilakukan backend sebelum run dibuat.
+              Pemeriksaan struktur header FASTQ dan kesesuaian identifier reads R1/R2
+              sebelum pipeline dimulai.
             </span>
           </div>
         </div>

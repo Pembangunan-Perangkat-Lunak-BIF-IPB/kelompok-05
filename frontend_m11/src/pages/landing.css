@@ -1,6 +1,6 @@
 .landing {
-  --lp-bg: #07121a;
-  --lp-cyan: #22d3ee;
+  --lp-bg: #0F172A;
+  --lp-cyan: #38BDF8;
   position: relative;
   min-height: 100vh;
   min-height: 100svh;
@@ -8,106 +8,132 @@
   flex-direction: column;
   background: var(--lp-bg);
   color: #fff;
-  font-family: 'Public Sans', system-ui, sans-serif;
-  overflow: hidden;
+  font-family: 'Inter', 'Public Sans', system-ui, sans-serif;
+  overflow-x: hidden;
 }
 .lp-grid {
   position: absolute; inset: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(56, 189, 248, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.045) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 .lp-glow {
   position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 60% 45% at 50% 0%, rgba(20, 184, 166, 0.2), transparent 70%);
+  background: radial-gradient(ellipse 60% 45% at 50% 0%, rgba(56, 189, 248, 0.18), rgba(168, 85, 247, 0.12) 45%, transparent 72%);
 }
 
 /* Top bar */
 .lp-top {
   position: sticky; top: 0; z-index: 20;
-  height: 64px; padding: 0 32px;
+  height: clamp(54px, 7vh, 64px); padding: 0 clamp(16px, 3vw, 32px);
   display: flex; align-items: center; justify-content: space-between;
-  background: rgba(7, 18, 26, 0.7);
+  background: rgba(15, 23, 42, 0.75);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(8, 51, 68, 0.4);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
 }
 .lp-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
 .lp-brand img { border-radius: 8px; display: block; }
 .lp-about {
   font: inherit; font-size: 14px; font-weight: 600; color: #cbd5e1; cursor: pointer;
-  background: transparent; border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 10px; padding: 8px 16px;
+  background: transparent; border: 1px solid rgba(56, 189, 248, 0.28); border-radius: 10px; padding: 8px 16px;
   transition: color .15s, border-color .15s, background .15s;
 }
-.lp-about:hover { color: #fff; border-color: rgba(34, 211, 238, 0.6); background: rgba(34, 211, 238, 0.08); }
+.lp-about:hover { color: #fff; border-color: rgba(56, 189, 248, 0.65); background: rgba(56, 189, 248, 0.1); }
 .lp-about:focus-visible, .lp-cta:focus-visible { outline: 2px solid var(--lp-cyan); outline-offset: 3px; }
 
-/* Konten */
+/* 1. Pusatkan posisi kontainer hero secara vertikal */
 .lp-main {
-  position: relative; z-index: 5; flex: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; gap: 40px;
-  padding: 32px 24px 284px; /* ruang untuk animasi 260px */
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 36px;
+  padding: 24px 24px 240px;
 }
+
+/* Efek Teks Gradasi (Putih ke Cyan) */
 .lp-title {
-  margin: 0; max-width: 1100px;
-  font-size: clamp(34px, 5vw, 68px); line-height: 1.1; font-weight: 800; letter-spacing: -0.025em;
-  background: linear-gradient(100deg, #fff 20%, var(--lp-cyan) 100%);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent;
+  margin: 0;
+  max-width: 1080px;
+  font-size: clamp(32px, 4.5vw, 60px);
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  background: linear-gradient(100deg, #FFFFFF 20%, #38BDF8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-wrap: balance;
 }
-.lp-title span { display: block; }
-@media (max-width: 767px) { .lp-title span { display: inline; } }
+
+/* Hapus pemisahan baris paksa dari span bawaan */
+.lp-title span {
+  display: inline !important;
+}
 
 .lp-cta {
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 16px 32px; border-radius: 12px; text-decoration: none;
-  font-weight: 700; font-size: 16px; color: #fff;
-  background: linear-gradient(135deg, #14b8a6, #0e6e6e);
-  box-shadow: 0 10px 30px -8px rgba(20, 184, 166, 0.55);
-  transition: transform .15s, box-shadow .15s;
+  padding: clamp(12px, 1.8vh, 16px) clamp(24px, 3vw, 32px); border-radius: 999px; text-decoration: none;
+  font-weight: 700; font-size: clamp(14px, 1.25vw, 16px); color: #FFF; border: none;
+  background: var(--gradient-primary);
+  box-shadow: 0 10px 30px -8px rgba(168, 85, 247, 0.5);
+  transition: all 0.3s ease;
 }
-.lp-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 34px -8px rgba(20, 184, 166, 0.7); }
+.lp-cta:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 14px 34px -8px rgba(168, 85, 247, 0.65); }
 
 .lp-inputs { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
 .lp-inputs-label { color: #64748b; font-weight: 500; margin-right: 4px; }
 .lp-chip {
-  padding: 5px 12px; border-radius: 999px; font-weight: 600; color: #a5f3fc;
-  background: rgba(8, 51, 68, 0.45); border: 1px solid rgba(34, 211, 238, 0.18);
+  padding: 5px 12px; border-radius: 999px; font-weight: 600; color: #BAE6FD;
+  background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
-/* Animasi read pileup */
+/* Animasi read pileup container */
 .lp-pileup {
-  position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 260px; z-index: 1;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: clamp(200px, 30vh, 280px);
+  z-index: 1;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 24%);
   mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 24%);
-  -webkit-mask-composite: source-in; mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 /* Popup Hubungi Kami */
 .lp-overlay {
   position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
-  padding: 24px; background: rgba(3, 9, 14, 0.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  padding: 24px; background: rgba(15, 23, 42, 0.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
 .lp-modal {
-  position: relative; width: 100%; max-width: 400px; background: #fff; color: #0f1f2c;
+  position: relative; width: 100%; max-width: 400px; background: #fff; color: #0F172A;
   border-radius: 16px; padding: 28px 28px 24px; box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.5);
 }
-.lp-modal h2 { margin: 0 0 18px; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.lp-modal h2 { margin: 0 0 18px; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; color: #0F172A; }
 .lp-modal-x {
   position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center;
   border: 0; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer;
 }
-.lp-modal-x:hover { background: #f1f5f9; color: #0f1f2c; }
+.lp-modal-x:hover { background: #f1f5f9; color: #0F172A; }
 .lp-contact-row {
   display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 14px;
-  background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; color: #0e6e6e;
+  background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; color: #0284C7;
 }
-.lp-contact-row a { flex: 1; color: #0f1f2c; font-weight: 600; text-decoration: none; word-break: break-all; }
-.lp-contact-row a:hover { text-decoration: underline; color: #0e6e6e; }
+.lp-contact-row a { flex: 1; color: #0F172A; font-weight: 600; text-decoration: none; word-break: break-all; }
+.lp-contact-row a:hover { text-decoration: underline; color: #0284C7; }
 .lp-copy {
   display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 600;
-  padding: 7px 12px; border-radius: 8px; border: 0; cursor: pointer; color: #fff; background: #0f1f2c;
+  padding: 7px 12px; border-radius: 8px; border: 0; cursor: pointer; color: #fff; background: #0F172A;
+  transition: opacity 0.2s ease, background 0.2s ease;
 }
-.lp-copy:hover { background: #0e6e6e; }
-.lp-modal-x:focus-visible, .lp-copy:focus-visible { outline: 2px solid #0e6e6e; outline-offset: 2px; }
+.lp-copy:hover { background: var(--gradient-primary); }
+.lp-modal-x:focus-visible, .lp-copy:focus-visible { outline: 2px solid #38BDF8; outline-offset: 2px; }

@@ -1,65 +1,289 @@
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAdminHealth } from '../../lib/api'
-import { pick } from '../../lib/risk'
 import Icon from '../../components/Icon'
 import '../history.css'
 
-const POLL = 5000
-const pct = (v) => (v == null || Number.isNaN(Number(v)) ? null : Math.max(0, Math.min(100, Number(v))))
-const dash = (v, s = '') => (v == null ? '-' : `${v}${s}`)
+const POLL_MS = 15000
 
-// TODO(backend): /admin/health belum ada; saat 404 dipakai /health. Nama field di bawah adalah asumsi.
+const number = (value) => {
+  if (value === null || value === undefined || value === '') return null
+  const result = Number(value)
+  return Number.isFinite(result) ? result : null
+}
+
+const percent = (value) => {
+  const n = number(value)
+  return n === null ? null : Math.min(100, Math.max(0, n))
+}
+
+const display = (value, unit = '') =>
+  value === null || value === undefined ? '—' : `${value}${unit}`
+
 export default function HealthCheck() {
-  const [d, setD] = useState(null)
+  const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const timer = useRef()
+  const [checkedAt, setCheckedAt] = useState(null)
+  const requestRunning = useRef(false)
 
   const load = useCallback(async () => {
+    if (requestRunning.current) return
+    requestRunning.current = true
     setBusy(true)
-    try {
-      const x = await getAdminHealth()
-      setD(x); setError('')
-    } catch (e) { setError(e.message || 'Data pemantauan ini tidak dapat diperoleh. Periksa koneksi soket daemon bioinformatika.') } finally { setBusy(false) }
-  }, [])
-  useEffect(() => { load(); timer.current = setInterval(load, POLL); return () => clearInterval(timer.current) }, [load])
 
-  const cpu = pct(pick(d, 'cpu_percent', 'cpu_usage')), ram = pct(pick(d, 'ram_percent', 'memory_percent'))
-  const disk = pct(pick(d, 'disk_percent', 'scratch_percent'))
-  const queue = d?.queue ?? d?.job_queue ?? []
-  const status = pick(d, 'status') ?? (d ? 'ok' : null)
+    try {
+      const response = await getAdminHealth()
+      setData(response)
+      setCheckedAt(new Date())
+      setError('')
+    } catch (err) {
+      setError(err.message || 'Gagal mengambil status layanan.')
+    } finally {
+      requestRunning.current = false
+      setBusy(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+    const timer = setInterval(load, POLL_MS)
+    return () => clearInterval(timer)
+  }, [load])
+
+  const cpu = percent(data?.cpu_percent ?? data?.cpu_usage)
+  const ram = percent(data?.ram_percent ?? data?.memory_percent)
+  const disk = percent(data?.disk_percent ?? data?.scratch_percent)
+
+  const hasQueue = Array.isArray(data?.queue) ||
+    Array.isArray(data?.job_queue)
+
+  const queue = Array.isArray(data?.queue)
+    ? data.queue
+    : Array.isArray(data?.job_queue)
+      ? data.job_queue
+      : []
+
+  const running = queue.filter((job) =>
+    ['RUNNING', 'PROCESSING'].includes(
+      String(job.status || '').toUpperCase()
+    )
+  ).length
+
+  const pending = queue.filter((job) =>
+    ['PENDING', 'QUEUED', 'WAITING'].includes(
+      String(job.status || '').toUpperCase()
+    )
+  ).length
+
+  const status = data?.status ?? null
 
   return (
     <>
-      <div className="hh"><div><h1 style={{ fontSize: 22 }}>Pemantauan Server &amp; Diagnostik Komputasi</h1><p>Status kesehatan node HPC (High Performance Computing), alokasi sumber daya, dan antrean daemon bioinformatika secara real-time.</p></div>
-        <button className="btn-ok" onClick={load} disabled={busy} style={{ background: 'var(--teal-d)', borderRadius: 2 }}>{busy ? <span className="spinner" /> : <Icon name="refresh" size={11} />} Perbarui Sekarang</button></div>
-      {error && <p className="alert error" role="alert" style={{ marginTop: 16 }}>{error}</p>}
-      {d && status && <p className={`alert ${String(status).toLowerCase() === 'ok' ? 'ok' : 'error'}`} style={{ marginTop: 16 }}>Status layanan API: <b>{String(status)}</b></p>}
-
-      <div className="hc-grid">
-        <div className="hc"><small>Utilisasi CPU <Icon name="server" size={13} /></small><div className="n">{dash(cpu, '%')} <span className="tg">{cpu == null ? 'Tidak ada data' : cpu < 85 ? 'Core Load Nominal' : 'High Load'}</span></div><div className="hbar"><i style={{ width: `${cpu ?? 0}%` }} /></div><div className="f"><span>{dash(pick(d, 'cpu_cores_active'))} / {dash(pick(d, 'cpu_cores'))} Core aktif</span></div></div>
-        <div className={`hc`}><small>Utilisasi RAM <Icon name="alert" size={13} /></small><div className="n">{dash(ram, '%')} <span className={`tg ${ram > 85 ? 'w' : ''}`}>{ram > 85 ? 'MEMORY ALERT' : 'Nominal'}</span></div><div className={`hbar ${ram > 85 ? 'w' : ''}`}><i style={{ width: `${ram ?? 0}%` }} /></div><div className="f"><span>{dash(pick(d, 'ram_used_gb'))} GB / {dash(pick(d, 'ram_total_gb'))} GB terpakai</span></div></div>
-        <div className="hc"><small>Penyimpanan Scratch</small><div className="n">{dash(pick(d, 'disk_used_gb'))} <span style={{ fontSize: 14, color: '#475569' }}>GB</span></div><div className="hbar g"><i style={{ width: `${disk ?? 0}%` }} /></div><div className="f"><span>dari {dash(pick(d, 'disk_total_gb'))} GB kapasitas total</span></div></div>
-        <div className="hc"><small>Antrean Tugas (Job Queue)</small><div className="n">{queue.length} <span className="tg g">HEALTHY PIPE</span></div><div className="f"><b>{queue.filter((j) => /RUN/i.test(j.status)).length} berjalan, {queue.filter((j) => !/RUN/i.test(j.status)).length} menunggu</b></div></div>
+      <div className="hh">
+        <div>
+          <h1 style={{ fontSize: 22 }}>
+            Status Server &amp; Layanan VarEscape
+          </h1>
+          <p>
+            Pemeriksaan ketersediaan API dan informasi sumber daya
+            yang disediakan backend. Data yang tidak tersedia
+            ditampilkan sebagai belum terpantau.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn-ok"
+          onClick={load}
+          disabled={busy}
+          style={{
+            background: 'var(--teal-d)',
+            borderRadius: 2
+          }}
+        >
+          {busy
+            ? <span className="spinner" />
+            : <Icon name="refresh" size={11} />}
+          {' '}Perbarui Sekarang
+        </button>
       </div>
 
-      <section className="sec" style={{ border: '1px solid #e2e8f0', borderRadius: 4 }}>
-        <div className="sec-h"><div><h2 style={{ fontSize: 18 }}><Icon name="server" size={13} /> Antrean Tugas Bioinformatika</h2><p>Daftar eksekusi analisis genomic pipeline yang sedang berjalan dan antrean prioritas komputasi saat ini.</p></div><small className="muted">Slot Terpakai: {queue.filter((j) => /RUN/i.test(j.status)).length}</small></div>
-        <div className="q-row th"><span>PEMILIK</span><span>PIPELINE STAGE</span><span>ALOKASI CPU / RAM</span><span>WAKTU BERJALAN</span><span>STATUS</span></div>
-        {!queue.length && <div className="empty">Tidak ada tugas dalam antrean (atau backend belum mengirim data antrean).</div>}
-        {queue.map((j, i) => (
-          <div className="q-row" key={j.run_id ?? i}>
-            <span>{j.owner ?? '-'}</span><span>{j.stage ?? '-'}</span><span>{j.alloc ?? '-'}</span><span>{j.elapsed ?? '-'}</span><span className="sbadge run">{j.status}</span>
+      {error && (
+        <p className="alert error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {data && (
+        <p
+          className={`alert ${
+            ['ok', 'healthy'].includes(String(status).toLowerCase())
+              ? 'ok'
+              : 'error'
+          }`}
+          style={{ marginTop: 16 }}
+        >
+          Status API: <b>{display(status)}</b>
+          {checkedAt && (
+            <span style={{ marginLeft: 10 }}>
+              • Diperiksa pukul {checkedAt.toLocaleTimeString('id-ID')}
+            </span>
+          )}
+        </p>
+      )}
+
+      <div className="hc-grid">
+        <div className="hc">
+          <small>
+            Utilisasi CPU <Icon name="server" size={13} />
+          </small>
+          <div className="n">
+            {display(cpu, '%')}
+            <span className="tg">
+              {cpu === null ? 'Belum terpantau' : 'Data backend'}
+            </span>
+          </div>
+          <div className="hbar">
+            <i style={{ width: `${cpu ?? 0}%` }} />
+          </div>
+          <div className="f">
+            <span>
+              {cpu === null
+                ? 'API belum memberikan angka utilisasi CPU.'
+                : `${display(data?.cpu_cores_active)} / ${display(data?.cpu_cores)} core aktif`}
+            </span>
+          </div>
+        </div>
+
+        <div className="hc">
+          <small>Penggunaan RAM</small>
+          <div className="n">
+            {display(ram, '%')}
+            <span className="tg">
+              {ram === null ? 'Belum terpantau' : 'Data backend'}
+            </span>
+          </div>
+          <div className="hbar">
+            <i style={{ width: `${ram ?? 0}%` }} />
+          </div>
+          <div className="f">
+            <span>
+              {ram === null
+                ? 'API belum memberikan angka penggunaan RAM.'
+                : `${display(data?.ram_used_gb, ' GB')} dari ${display(data?.ram_total_gb, ' GB')}`}
+            </span>
+          </div>
+        </div>
+
+        <div className="hc">
+          <small>Penyimpanan Server</small>
+          <div className="n">
+            {display(data?.disk_used_gb)}
+            <span style={{ fontSize: 14 }}> GB</span>
+          </div>
+          <div className="hbar g">
+            <i style={{ width: `${disk ?? 0}%` }} />
+          </div>
+          <div className="f">
+            <span>
+              {data?.disk_used_gb == null
+                ? 'Informasi penyimpanan belum tersedia.'
+                : `Dari ${display(data?.disk_total_gb, ' GB')} kapasitas total`}
+            </span>
+          </div>
+        </div>
+
+        <div className="hc">
+          <small>Analisis Aktif &amp; Menunggu</small>
+          <div className="n">
+            {hasQueue ? queue.length : '—'}
+            <span className="tg">
+              {hasQueue ? 'Tugas tercatat' : 'Belum terpantau'}
+            </span>
+          </div>
+          <div className="f">
+            <span>
+              {hasQueue
+                ? `${running} berjalan, ${pending} menunggu`
+                : 'Data antrean tidak tersedia dari API.'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <section
+        className="sec"
+        style={{
+          border: '1px solid #e2e8f0',
+          borderRadius: 4
+        }}
+      >
+        <div className="sec-h">
+          <div>
+            <h2 style={{ fontSize: 18 }}>
+              <Icon name="server" size={13} />
+              {' '}Daftar Analisis Aktif
+            </h2>
+            <p>
+              Menampilkan tugas yang dikirim oleh API backend.
+              Bukan pemantauan scheduler HPC terpisah.
+            </p>
+          </div>
+          <small className="muted">
+            {hasQueue ? `${running} berjalan` : 'Data tidak tersedia'}
+          </small>
+        </div>
+
+        <div className="q-row th">
+          <span>PEMILIK</span>
+          <span>STASIUN</span>
+          <span>ALOKASI</span>
+          <span>DURASI</span>
+          <span>STATUS</span>
+        </div>
+
+        {!hasQueue && (
+          <div className="empty">
+            Backend belum menyediakan daftar tugas.
+          </div>
+        )}
+
+        {hasQueue && queue.length === 0 && (
+          <div className="empty">
+            Tidak ada tugas dalam daftar yang dikirim backend.
+          </div>
+        )}
+
+        {queue.map((job, index) => (
+          <div className="q-row" key={job.run_id ?? index}>
+            <span>{display(job.owner)}</span>
+            <span>{display(job.stage)}</span>
+            <span>{display(job.alloc)}</span>
+            <span>{display(job.elapsed)}</span>
+            <span className="sbadge run">
+              {display(job.status)}
+            </span>
           </div>
         ))}
-        <div className="tbl-foot"><span>Menampilkan {queue.length} antrean aktif</span></div>
+
+        <div className="tbl-foot">
+          <span>
+            {hasQueue
+              ? `Menampilkan ${queue.length} tugas`
+              : 'Antrean tidak terpantau'}
+          </span>
+        </div>
       </section>
 
       <div className="hc-2">
         <div className="hc">
           <div className="box-g">
-            <div className="kv-r"><span>Genomic Tools:</span><b>fastp, FastQC, BWA-MEM2, SAMtools, BCFtools, dan SnpEff</b></div>
-          </div></div>
+            <div className="kv-r">
+              <span>Perangkat pipeline:</span>
+              <b>fastp, BWA-MEM2, SAMtools, BCFtools, SnpEff</b>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   )

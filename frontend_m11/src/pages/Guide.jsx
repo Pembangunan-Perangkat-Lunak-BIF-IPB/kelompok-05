@@ -46,7 +46,7 @@ export default function Guide() {
           <div>
             <div className="step-top"><span className="tag">STEP 01</span><span className="step-ic"><Icon name="file" size={14} /></span></div>
             <h3>1. Siapkan berkas</h3>
-            <p className="d">FASTQ paired-end dan FASTA genom acuan.</p>
+            <p className="d">Siapkan dua FASTQ paired-end. FASTA referensi sudah tersedia otomatis di sistem.</p>
             <div className="step-box">
               <h4>Format pasangan</h4>
               <code>sample_R1.fastq.gz<br />sample_R2.fastq.gz</code>
@@ -62,7 +62,7 @@ export default function Guide() {
             <p className="d">Sistem memeriksa format dan header secara otomatis.</p>
             <div className="step-box">
               <div className="lv"><b>Format MIME, ekstensi, &amp; Phred FASTQ.</b></div>
-              <div className="lv"><b>Validitas FASTA single contig rujukan.</b></div>
+              <div className="lv"><b>Kesesuaian header dan pasangan reads FASTQ diperiksa backend saat upload.</b></div>
             </div>
           </div>
           <div className="step-foot"><span>Evaluasi Syntax</span><span className="chip blue">Realtime</span></div>
@@ -74,7 +74,7 @@ export default function Guide() {
             <p className="d">Pantau proses alignment, calling varian, dan anotasi realtime.</p>
             <div className="step-box"><h4>Log &amp; status</h4><span>Lacak progres eksekusi 4 stasiun komputasi secara transparan via console log.</span></div>
           </div>
-          <div className="step-foot"><span>Streaming Log</span><span className="chip">SSE Active</span></div>
+          <div className="step-foot"><span>Streaming Log</span><span className="chip">Pemantauan Progres</span></div>
         </section>
         <section className="step">
           <div>
@@ -90,7 +90,7 @@ export default function Guide() {
       <section className="topology">
         <div className="topo-head">
           <div><h3>Topologi Eksekusi Pipeline</h3><p>Visualisasi transisi data mentah FASTQ menjadi varian teranotasi dan laporan eksekutif terintegrasi</p></div>
-          <div className="ready"><i />Cluster Execution Daemon Ready</div>
+          <div className="ready"><i />Pipeline 4 Stasiun VarEscape</div>
         </div>
         <div className="topo">
           {NODES.map(([a, b, bg, fg, sub, t]) => (
@@ -99,25 +99,101 @@ export default function Guide() {
         </div>
       </section>
 
+      
       <section className="spec">
         <div className="spec-head">
-          <div><h3><Icon name="info" size={14} /> Spesifikasi Format &amp; Batas Ukuran Berkas</h3><p>Semua berkas diperiksa integritasnya sebelum dialokasikan ke compute cluster.</p></div>
+          <div>
+            <h3>
+              <Icon name="info" size={14} />
+              {' '}Spesifikasi Format &amp; Batas Ukuran Berkas
+            </h3>
+            <p>
+              Analisis menggunakan dua FASTQ paired-end dan
+              satu genom referensi bawaan sistem.
+            </p>
+          </div>
         </div>
-        <div className="spec-row th"><div>Berkas</div><div>Format yang diterima</div><div style={{ textAlign: 'right' }}>Batas maksimal</div><div>Deskripsi &amp; validasi</div></div>
+
+        <div className="spec-row th">
+          <div>Berkas</div>
+          <div>Format yang diterima</div>
+          <div style={{ textAlign: 'right' }}>Batas maksimal</div>
+          <div>Deskripsi &amp; validasi</div>
+        </div>
+
         <div className="spec-row">
-          <div className="name"><b>Data Sekuens</b><small>FASTQ Paired-End</small></div>
-          <div><div className="exts">{EXT(['.fastq', '.fq', '.fastq.gz', '.fq.gz'], '.fastq.gz')}</div><p>Read 1 &amp; Read 2 terpisah</p></div>
-          <div className="lim">1 GB<small>per berkas</small></div>
-          <div><p>Sekuens mentah hasil sekuensing NGS paired-end Illumina/MGI.</p><div className="sub">Validasi encoding Phred-33 / Phred-64 otomatis</div></div>
+          <div className="name">
+            <b>FASTQ Read 1 &amp; Read 2</b>
+            <small>Paired-end sequencing</small>
+          </div>
+          <div>
+            <div className="exts">
+              {EXT(
+                ['.fastq', '.fq', '.fastq.gz', '.fq.gz'],
+                '.fastq.gz'
+              )}
+            </div>
+            <p>
+              Pilih dua berkas dengan penamaan _R1 dan _R2.
+            </p>
+          </div>
+          <div className="lim">
+            1 GB
+            <small>per berkas</small>
+          </div>
+          <div>
+            <p>
+              Pemeriksaan awal di browser meliputi ekstensi,
+              ukuran, dan signature gzip.
+            </p>
+            <div className="sub">
+              Struktur FASTQ dan kecocokan pasangan reads
+              diperiksa backend saat upload final.
+            </div>
+          </div>
         </div>
+
         <div className="spec-row">
-          <div className="name"><b>Genom Acuan</b><small>Reference FASTA</small></div>
-          <div><div className="exts">{EXT(['.fasta', '.fa', '.fna'])}</div><p>Single continuous record</p></div>
-          <div className="lim">50 MB<small>uncompressed</small></div>
-          <div><p>Genom rujukan lengkap dengan header sekuens standar NCBI.</p><div className="sub">Validasi non-IUPAC berlebih (&lt; 1% ambigu)</div></div>
+          <div className="name">
+            <b>Genom Acuan</b>
+            <small>Reference FASTA</small>
+          </div>
+          <div>
+            <div className="exts">
+              <span className="chip teal">
+                Preset otomatis
+              </span>
+            </div>
+            <p>NC_045512.2 — SARS-CoV-2 Wuhan-Hu-1</p>
+          </div>
+          <div className="lim">
+            —
+            <small>Tidak diunggah</small>
+          </div>
+          <div>
+            <p>
+              FASTA referensi sudah tersedia di backend
+              dan digunakan secara otomatis.
+            </p>
+            <div className="sub">
+              Pengguna tidak dapat mengubah referensi
+              melalui halaman Analisis Baru.
+            </div>
+          </div>
         </div>
-        <div className="spec-foot"><span><Icon name="info" size={11} /> Pengunggahan file terkompresi (.gz) sangat direkomendasikan untuk mempercepat transfer data NGS.</span><small>Maks. Batch: 20 Sampel per Jalur</small></div>
+
+        <div className="spec-foot">
+          <span>
+            <Icon name="info" size={11} />
+            {' '}File .fastq.gz direkomendasikan untuk
+            mengurangi ukuran transfer.
+          </span>
+          <small>
+            Satu pasangan FASTQ untuk setiap analisis.
+          </small>
+        </div>
       </section>
+
 
       <section className="note-bad">
         <div className="ic"><Icon name="alert" size={18} /></div>

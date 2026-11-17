@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { auth, errorMessage, login } from '../lib/api'
+import { auth, session, logout, errorMessage, login } from '../lib/api'
 import Icon from '../components/Icon'
 import { AuthShell, Brand, Field, RolePills } from '../components/Auth'
 
@@ -15,7 +15,15 @@ export default function Login({ role = 'researcher' }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  if (role === 'researcher' && auth.token) return <Navigate to="/guide" replace />
+  const existingRole = String(session.user?.role ?? '').toUpperCase()
+
+  if (role === 'researcher' && auth.token && existingRole === 'RESEARCHER') {
+    return <Navigate to="/guide" replace />
+  }
+
+  if (role === 'admin' && auth.token && existingRole === 'ADMIN') {
+    return <Navigate to="/admin/accounts" replace />
+  }
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -25,13 +33,20 @@ export default function Login({ role = 'researcher' }) {
       const data = await login(email.trim(), password)
       // TODO(backend): pastikan respons login membawa peran pengguna (user.role).
       const r = String(data?.user?.role ?? '').toUpperCase()
-      if (role === 'admin' && r && r !== 'ADMIN' && r !== 'ADMINISTRATOR') {
-        throw new Error('Akun ini bukan Administrator.')
+      const expected = role === 'admin' ? 'ADMIN' : 'RESEARCHER'
+
+      if (r !== expected) {
+        logout()
+
+        throw new Error(
+          role === 'admin'
+            ? 'Akses ditolak. Silakan gunakan akun Administrator.'
+            : 'Akses ditolak. Akun Administrator tidak dapat masuk sebagai Peneliti.'
+        )
       }
       navigate(role === 'admin' ? '/admin/accounts' : (location.state?.from ?? '/guide'), { replace: true })
     } catch (err) {
       setError(err.message || errorMessage(null))
-      if (role === 'admin') auth.token = null
     } finally {
       setBusy(false)
     }

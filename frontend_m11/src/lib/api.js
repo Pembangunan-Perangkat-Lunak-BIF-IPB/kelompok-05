@@ -90,6 +90,24 @@ export async function login(email, password) {
   return data
 }
 
+// Validasi FASTQ sebelum pengguna mengatur parameter.
+// Tidak membuat run ataupun memulai pipeline.
+export function validateFastqHeaders(r1, r2) {
+  if (!r1 || !r2) {
+    throw new Error('FASTQ R1 dan R2 wajib dipilih.')
+  }
+
+  const form = new FormData()
+  form.append('file_fastq_r1', r1)
+  form.append('file_fastq_r2', r2)
+
+  return request('/analysis/validate-headers', {
+    method: 'POST',
+    body: form,
+    fallback: 'Validasi header FASTQ gagal.',
+  })
+}
+
 // FASTA acuan (NC_045512.2) = preset sistem; tabel IEDB sudah tidak dipakai -> hanya FASTQ R1/R2 yang diunggah.
 export function uploadAnalysis({
   sampleName, r1, r2 = null, executionMode = 'default', parameters = {},

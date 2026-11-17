@@ -8,7 +8,9 @@ Tidak mengembalikan password, token, atau konfigurasi rahasia.
 import os
 import platform
 import shutil
+import psutil
 from datetime import datetime, timezone
+
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
@@ -236,6 +238,30 @@ def get_admin_analyses(
 # HEALTH CHECK
 # ============================================================
 
+def _cpu_info():
+    """
+    Mengukur penggunaan CPU lingkungan server FastAPI.
+
+    Jika backend berjalan di WSL, angka yang diperoleh
+    merupakan penggunaan CPU lingkungan WSL/Linux,
+    bukan metrik cluster HPC.
+    """
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+
+        return {
+            "cpu_percent": round(cpu_percent, 1),
+            "cpu_cores": psutil.cpu_count(logical=True),
+            "cpu_cores_active": None,
+        }
+
+    except Exception:
+        return {
+            "cpu_percent": None,
+            "cpu_cores": os.cpu_count(),
+            "cpu_cores_active": None,
+        }
+
 def _ram_info():
     """
     RAM dari Linux/WSL.
@@ -390,9 +416,6 @@ def get_admin_health(
         "status": "ok",
         "database": "connected",
         "node_id": platform.node(),
-        "cpu_cores": os.cpu_count(),
-        "cpu_percent": None,
-        "cpu_cores_active": None,
         "pipeline_engine": "FastAPI BackgroundTasks",
         "daemon_status": None,
         "tools": None,
@@ -400,6 +423,7 @@ def get_admin_health(
         "io_read": None,
         "temperature_c": None,
         "queue": queue,
+        **_cpu_info(),
         **_ram_info(),
         **_disk_info(),
     }

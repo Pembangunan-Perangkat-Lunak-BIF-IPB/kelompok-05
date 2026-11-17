@@ -2,12 +2,18 @@
 import { useSyncExternalStore } from 'react'
 import { validateFormat, splitFastqPair } from './validators'
 import { defaultValues, validateParams, buildRunPayload } from './params'
-import { uploadAnalysis, runAnalysis, lastRun } from './api'
+import {
+  uploadAnalysis,
+  runAnalysis,
+  lastRun,
+  validateFastqHeaders,
+} from './api'
 
 const initial = () => ({
   sampleName: '',
   files: {},
   checks: {},
+  headerCheck: null,
   mode: 'default',
   vals: defaultValues(),
   phase: 'idle',
@@ -62,30 +68,31 @@ export const analysisDraft = {
   },
 
   setMode(value) {
-    if (!busy() && !state.result) {
+    if (!busy() && !state.result && state.headerCheck?.ok) {
       emit({ mode: value, error: '' })
     }
   },
 
   setValues(values) {
-    if (!busy() && !state.result) {
+    if (!busy() && !state.result && state.headerCheck?.ok) {
       emit({ vals: values, error: '' })
     }
   },
 
   restoreDefaults() {
-    if (!busy() && !state.result) {
+    if (!busy() && !state.result && state.headerCheck?.ok) {
       emit({ vals: defaultValues(), error: '' })
     }
   },
 
+  
   async selectFiles(fileList) {
     if (busy() || state.result) return
 
-    const files = Array.from(fileList ?? [])
-    if (!files.length) return
+    const selectedFiles = Array.from(fileList ?? [])
+    if (!selectedFiles.length) return
 
-    const pair = splitFastqPair(files)
+    const pair = splitFastqPair(selectedFiles)
 
     if (pair.error) {
       emit({ pairError: pair.error, error: '' })
@@ -95,43 +102,86 @@ export const analysisDraft = {
     const currentId = ++validationId
     const selected = { r1: pair.r1, r2: pair.r2 }
 
-    // Simpan File objects segera. Tidak perlu upload ke server.
+    // Simpan File objects agar tidak hilang saat navigasi.
     emit({
       files: selected,
       checks: {},
+      headerCheck: null,
       pairError: '',
       error: '',
       phase: 'validating',
     })
 
     try {
+      // LAPIS 1 — Pemeriksaan lokal di browser.
       const [r1, r2] = await Promise.all([
         validateFormat('fastq', pair.r1),
         validateFormat('fastq', pair.r2),
       ])
 
-      // Abaikan validasi lama jika pengguna memilih ulang file.
       if (currentId !== validationId) return
 
       const checks = { r1, r2 }
-      const valid = r1.ok && r2.ok
 
+      if (!r1.ok || !r2.ok) {
+        emit({
+          checks,
+          phase: 'invalid',
+          error: 'Ada FASTQ yang tidak lolos validasi format.',
+        })
+        return
+      }
+
+      // Format PASS, tetapi header masih belum diperiksa.
       emit({
         checks,
-        phase: valid ? 'ready' : 'invalid',
-        error: valid
+        phase: 'checking_headers',
+        error: '',
+      })
+
+      // LAPIS 2 — Pemeriksaan di backend.
+      const validation = await validateFastqHeaders(
+        pair.r1,
+        pair.r2
+      )
+
+      // Abaikan respons lama jika pengguna memilih file lain.
+      if (currentId !== validationId) return
+
+      const passed =
+        validation.status === 'PASS' &&
+        validation.header === 'PASS' &&
+        validation.sequence_integrity === 'PASS' &&
+        validation.paired_end === true
+
+      emit({
+        headerCheck: {
+          ok: passed,
+          readCount: validation.read_count,
+          message: validation.message,
+        },
+        phase: passed ? 'ready' : 'invalid',
+        error: passed
           ? ''
-          : 'Ada berkas yang tidak lolos pemeriksaan awal.',
+          : 'Validasi header FASTQ tidak berhasil.',
       })
     } catch (err) {
       if (currentId !== validationId) return
 
       emit({
+        headerCheck:
+          state.checks.r1?.ok && state.checks.r2?.ok
+            ? {
+                ok: false,
+                message: err.message || 'Validasi header gagal.',
+              }
+            : null,
         phase: 'invalid',
-        error: err.message || 'Pemeriksaan berkas gagal.',
+        error: err.message || 'Pemeriksaan FASTQ gagal.',
       })
     }
   },
+
 
   async start() {
     if (activeRequest) return activeRequest
@@ -144,10 +194,17 @@ export const analysisDraft = {
 
     const { files, checks, mode, vals, sampleName } = state
 
-    if (!files.r1 || !files.r2 ||
-        !checks.r1?.ok || !checks.r2?.ok) {
+    if (
+      !files.r1 ||
+      !files.r2 ||
+      !checks.r1?.ok ||
+      !checks.r2?.ok ||
+      !state.headerCheck?.ok ||
+      state.phase === 'validating' ||
+      state.phase === 'checking_headers'
+    ) {
       emit({
-        error: 'Pilih dua FASTQ yang lolos pemeriksaan awal.',
+        error: 'Kedua FASTQ harus lolos validasi format dan header terlebih dahulu.',
       })
       return null
     }

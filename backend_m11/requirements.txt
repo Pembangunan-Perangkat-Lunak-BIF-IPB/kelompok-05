@@ -23,6 +23,7 @@ opentelemetry-api==1.45.1
 passlib[bcrypt]==1.7.4
 playwright>=1.40,<2
 plotly>=5,<7
+psutil==7.2.2
 psycopg==3.3.6
 psycopg-binary==3.3.6
 psycopg2-binary==2.9.13

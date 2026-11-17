@@ -1,0 +1,267 @@
+
+.public-results-page {
+  max-width: 1160px;
+  margin: 0 auto;
+  color: #0c1930;
+}
+
+/* Judul halaman */
+
+.public-results-heading {
+  margin-bottom: 20px;
+}
+
+.public-results-heading h1 {
+  margin: 0 0 7px;
+  font-size: 22px;
+  font-weight: 750;
+}
+
+.public-results-heading p {
+  margin: 0;
+  font-size: 12px;
+  color: #60748b;
+  line-height: 1.7;
+}
+
+/* Pencarian */
+
+.public-results-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 13px;
+  background: #fff;
+  border: 1px solid #dbe6ef;
+  border-radius: 13px;
+}
+
+.public-results-toolbar input {
+  width: 75%;
+  padding: 10px 12px;
+  background: #f0f5f9;
+  border: 1px solid #dbe6ef;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.public-results-toolbar input:focus {
+  border-color: #00bce8;
+  box-shadow: 0 0 0 3px rgba(0, 188, 232, .12);
+}
+
+.public-results-toolbar > span {
+  font-size: 11px;
+  color: #60748b;
+  white-space: nowrap;
+}
+
+/* Container tabel */
+
+.public-results-table-wrap {
+  overflow: hidden;
+  border: 1px solid #dbe6ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(12, 25, 48, .035);
+}
+
+.public-results-table-scroll {
+  overflow-x: auto;
+}
+
+.public-results-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.public-results-table thead {
+  background: #eef4f8;
+}
+
+.public-results-table th {
+  padding: 15px 13px;
+  color: #0c1930;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  border-bottom: 1px solid #dbe6ef;
+}
+
+.public-results-table td {
+  padding: 13px;
+  font-size: 11px;
+  vertical-align: middle;
+  border-bottom: 1px solid #e0e9f1;
+}
+
+.public-results-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.public-results-table tbody tr:hover {
+  background: #f8fbfe;
+}
+
+/* Nama berkas */
+
+.public-results-file {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 210px;
+}
+
+.public-results-file-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  background: #dff5ff;
+  color: #009ad6;
+  font-size: 14px;
+}
+
+.public-results-file strong {
+  display: block;
+  font-size: 11px;
+  color: #0c1930;
+  overflow-wrap: anywhere;
+}
+
+.public-results-file small {
+  display: block;
+  margin-top: 4px;
+  color: #698099;
+  font-size: 10px;
+}
+
+/* Data tabel */
+
+.public-results-number {
+  text-align: center;
+  font-weight: 650;
+}
+
+.public-results-run {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.public-results-run code {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #edf3f8;
+  font-size: 10px;
+  color: #12233c;
+  font-weight: 700;
+}
+
+.public-results-last {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #008ed0;
+}
+
+.public-results-sample {
+  font-size: 11px;
+}
+
+.public-results-date {
+  color: #61748a;
+  white-space: nowrap;
+}
+
+/* Tombol buka hasil */
+
+.public-results-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 13px;
+  border-radius: 24px;
+  background: linear-gradient(105deg, #00bce8, #b84df2);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: filter .2s, transform .2s;
+}
+
+.public-results-button:hover {
+  color: #fff;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+/* Footer tabel */
+
+.public-results-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px;
+  background: #eef4f8;
+  color: #60748b;
+  font-size: 10px;
+}
+
+.public-results-empty {
+  text-align: center;
+  padding: 35px !important;
+  color: #60748b;
+}
+
+.public-results-message {
+  padding: 35px;
+  text-align: center;
+  color: #60748b;
+  background: white;
+  border: 1px solid #dbe6ef;
+  border-radius: 13px;
+}
+
+/* Responsif */
+
+@media (max-width: 800px) {
+  .public-results-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .public-results-toolbar input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .public-results-toolbar > span {
+    white-space: normal;
+  }
+
+  .public-results-foot {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-results-button {
+    transition: none;
+  }
+
+  .public-results-button:hover {
+    transform: none;
+  }
+}

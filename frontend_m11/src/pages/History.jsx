@@ -113,7 +113,24 @@ export default function History() {
         <div className="tbl-foot"><span>Menampilkan {shown.length} dari {rows?.length ?? 0} proses analisis</span></div>
       </div>
 
-      <div className="note-card"><span className="ic"><Icon name="check" size={13} /></span><div><b>Kosong: "Belum ada hasil yang dapat ditampilkan."</b><p>Berkas berstatus <b style={{ color: 'var(--teal)' }}>Public</b> dapat diakses langsung oleh peran Pembaca tanpa token otorisasi tambahan. Berkas <b>Private</b> hanya dapat ditelaah oleh Peneliti pemilik berkas dan Administrator Lab.</p></div></div>
+      
+<div className="note-card">
+  <span className="ic">
+    <Icon name="info" size={13} />
+  </span>
+  <div>
+    <b>Informasi Akses Hasil Analisis</b>
+    <p>
+      Hasil analisis berstatus{' '}
+      <b style={{ color: 'var(--teal)' }}>Public</b>
+      {' '}dapat diakses melalui halaman Berkas Publik
+      oleh pengguna tanpa login. Hasil berstatus{' '}
+      <b>Private</b>
+      {' '}hanya dapat diakses oleh peneliti pemilik
+      analisis dan administrator yang berwenang.
+    </p>
+  </div>
+</div>
     </>
   )
 }

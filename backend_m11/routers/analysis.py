@@ -1,3 +1,4 @@
+import tempfile
 import os
 import shutil
 import uuid
@@ -95,11 +96,108 @@ def get_user_analysis_history(
     return [serialize_run(run) for run in runs]
 
 
+@router.post("/validate-headers")
+def validate_fastq_headers(
+    file_fastq_r1: UploadFile = File(...),
+    file_fastq_r2: UploadFile = File(...),
+    current_user_id: int = Depends(require_researcher),
+):
+    """
+    Pemeriksaan FASTQ sebelum pengaturan parameter.
+
+    - Wajib dua berkas paired-end.
+    - Tidak membuat AnalysisRun atau UploadedFile.
+    - Berkas sementara dihapus setelah pemeriksaan.
+    - Upload final tetap wajib memvalidasi ulang.
+    """
+    uploads = [
+        (
+            file_fastq_r1,
+            models.FileType.FASTQ_R1,
+            "FASTQ R1",
+            "reads_R1",
+        ),
+        (
+            file_fastq_r2,
+            models.FileType.FASTQ_R2,
+            "FASTQ R2",
+            "reads_R2",
+        ),
+    ]
+
+    extensions = [
+        _match_ext(upload.filename, FASTQ_EXTS, label)
+        for upload, _, label, _ in uploads
+    ]
+
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Direktori ini terpisah dari direktori run yang permanen.
+    with tempfile.TemporaryDirectory(
+        prefix=".fastq-validation-",
+        dir=str(UPLOAD_DIR),
+    ) as temp_dir:
+        stored_paths = []
+
+        for (upload, file_type, label, stem), ext in zip(
+            uploads, extensions
+        ):
+            path = Path(temp_dir) / f"{stem}{ext}"
+            received = 0
+
+            with path.open("wb") as output:
+                while True:
+                    chunk = upload.file.read(1024 * 1024)
+                    if not chunk:
+                        break
+
+                    received += len(chunk)
+
+                    if received > MAX_UPLOAD_BYTES[file_type]:
+                        raise HTTPException(
+                            status_code=413,
+                            detail=(
+                                f"Berkas {label} melebihi "
+                                "batas 1 GB."
+                            ),
+                        )
+
+                    output.write(chunk)
+
+            if received == 0:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Berkas {label} kosong.",
+                )
+
+            stored_paths.append(str(path))
+
+        # Validator yang sudah ada:
+        # header, identifier pasangan, struktur record, dan quality.
+        result = validate_fastq_pairs(
+            stored_paths[0],
+            stored_paths[1],
+        )
+
+    # TemporaryDirectory sudah dibersihkan sebelum respons.
+    return {
+        "status": "PASS",
+        "format": result["format"],
+        "header": result["header"],
+        "sequence_integrity": result["sequence_integrity"],
+        "read_count": result["read_count"],
+        "paired_end": result["paired_end"],
+        "message": (
+            "Header dan pasangan FASTQ valid. "
+            "Berkas siap digunakan untuk analisis."
+        ),
+    }
+
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
 def upload_analysis_files(
     sample_name: str = Form(...),
     file_fastq_r1: UploadFile = File(...),
-    file_fastq_r2: Optional[UploadFile] = File(None),
+    file_fastq_r2: UploadFile = File(...),
     execution_mode: str = Form("default", description="default atau custom"),
     min_dp: Optional[int] = Form(None),
     min_mq: Optional[int] = Form(None),
@@ -139,12 +237,14 @@ def upload_analysis_files(
     # (berkas, tipe, ekstensi_diizinkan, label, nama_simpan)
     specs = [
         (file_fastq_r1, models.FileType.FASTQ_R1, FASTQ_EXTS, "FASTQ R1", "reads_R1"),
+        ( file_fastq_r2,
+        models.FileType.FASTQ_R2,
+        FASTQ_EXTS,
+        "FASTQ R2",
+        "reads_R2",
+        ),
     ]
 
-    if file_fastq_r2 is not None:
-        specs.append(
-            (file_fastq_r2, models.FileType.FASTQ_R2, FASTQ_EXTS, "FASTQ R2", "reads_R2")
-        )
 
     # Validasi Lapis 1 (ekstensi) sebelum menulis apa pun ke disk
     exts = [_match_ext(uf.filename, allowed, label) for uf, _, allowed, label, _ in specs]
